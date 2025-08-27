@@ -1,92 +1,93 @@
 import * as THREE from "three"
-import { createCamera } from "./src/core/camera.js"
+import { createCamera } from "./core/camera.js"
 import {
   PAINTING_Y_OFFSET,
   ROOM_DEPTH,
   ROOM_HEIGHT,
   ROOM_WIDTH
-} from './src/core/constants.js'
-import { createControls } from "./src/core/controls.js"
-import { addDefaultLights } from './src/core/lighting.js'
-import { createRenderer } from "./src/core/renderer.js"
-import { createScene } from "./src/core/scene.js"
-import { createRaycaster } from './src/core/raycaster.js';
-import { createPointer } from './src/core/pointer.js';
+} from './core/constants.js'
+import { createControls } from "./core/controls.js"
+import { addDefaultLights } from './core/lighting.js'
+import { createRenderer } from "./core/renderer.js"
+import { createScene } from "./core/scene.js"
+import { createRaycaster } from './core/raycaster.js';
+import { createPointer } from './core/pointer.js';
 import {
   fetchArtwallsData
-} from './src/data/artwall.js'
+} from './data/artwall.js'
 import {
   fetchPaintingsData
-} from "./src/data/painting.js"
+} from "./data/painting.js"
 import {
   fetchTextureSets, setTexturePage
-} from './src/data/texture.js'
-import { getArtwalls, commitArtwallChanges } from './src/domain/artwall.js'
-import { getArtwallMode } from './src/domain/artwallMode.js'
-import { getSkipCancelBackground } from './src/domain/backgroundState.js'
-import { commitIntroChanges, getTempIntroMeshes } from './src/domain/intro.js'
+} from './data/texture.js'
+import { getArtwalls, commitArtwallChanges } from './domain/artwall.js'
+import { getArtwallMode } from './domain/artwallMode.js'
+import { getSkipCancelBackground } from './domain/backgroundState.js'
+import { commitIntroChanges, getTempIntroMeshes } from './domain/intro.js'
 import {
   commitPaintingChanges,
   getPaintings,
   getSelectedPainting,
   setSelectedPainting,
   getTempPaintings
-} from './src/domain/painting.js'
+} from './domain/painting.js'
 import {
   endEditingPainting,
   getEditingPainting,
   startEditingPainting
-} from './src/domain/paintingEditing.js'
-import { getPaintingMode } from './src/domain/paintingMode.js'
-import { getIntroMode } from "./src/domain/introMode.js"
-import { createRoom } from "./src/domain/room.js"
+} from './domain/paintingEditing.js'
+import { getPaintingMode } from './domain/paintingMode.js'
+import { getIntroMode } from "./domain/introMode.js"
+import { createRoom } from "./domain/room.js"
 import {
   getConfirmedTextureSet,
   setConfirmedTextureSet,
   setSelectedTextureSet
-} from './src/domain/texture.js'
-import { getCurrentWall } from './src/domain/wall.js'
-import { getZoomedInState } from './src/domain/zoomState.js'
-import { handleNavKeyDown } from './src/interaction/navKeyHandler.js'
-import { navigateLeft, navigateRight } from './src/interaction/paintingNavigation.js'
-import { moveCameraToHome, onClick, onDoubleClick } from './src/interaction/zoomControls.js'
-import { populateArtwallGrid, setupArtwallPagination } from "./src/ui/artwallGrid.js"
-import { checkExhibitPeriod } from './src/ui/exhibitionExpired.js'
-import { setupExhibitSettings } from './src/ui/exhibitionPanel.js'
-import { updateGalleryInfo } from "./src/ui/galleryInfo.js"
-import { closeInfo, showInfo, updatePaintingInfo } from './src/ui/infoModal.js'
-import { populateIntroGrid } from "./src/ui/introGrid.js"
-import { populatePaintingGrid, setupPaintingPagination } from "./src/ui/paintingGrid.js"
-import { getIsResizingPainting } from './src/ui/paintingResizeButtons.js'
-import { showPanel, setupPanelAutoClose } from './src/ui/panel.js'
-import { initSocialPanel } from './src/ui/socialPanel.js'
+} from './domain/texture.js'
+import { getCurrentWall } from './domain/wall.js'
+import { getZoomedInState } from './domain/zoomState.js'
+import { handleNavKeyDown } from './interaction/navKeyHandler.js'
+import { navigateLeft, navigateRight } from './interaction/paintingNavigation.js'
+import { moveCameraToHome, onClick, onDoubleClick } from './interaction/zoomControls.js'
+import { populateArtwallGrid, setupArtwallPagination } from "./ui/artwallGrid.js"
+import { checkExhibitPeriod } from './ui/exhibitionExpired.js'
+import { setupExhibitSettings } from './ui/exhibitionPanel.js'
+import { updateGalleryInfo } from "./ui/galleryInfo.js"
+import { closeInfo, showInfo, updatePaintingInfo } from './ui/infoModal.js'
+import { populateIntroGrid } from "./ui/introGrid.js"
+import { populatePaintingGrid, setupPaintingPagination } from "./ui/paintingGrid.js"
+import { getIsResizingPainting } from './ui/paintingResizeButtons.js'
+import { showPanel, setupPanelAutoClose } from './ui/panel.js'
+import { initSocialPanel } from './ui/socialPanel.js'
 import {
   applyPreviewTextureSet,
   onRestoreTextureSet,
   populateTextureGrid,
   setupApplyButton,
   setupTexturePagination
-} from './src/ui/textureGrid.js'
-import { addWallNavListeners } from './src/ui/wallNavigation.js'
+} from './ui/textureGrid.js'
+import { addWallNavListeners } from './ui/wallNavigation.js'
 import {
   startEditingArtwall,
   endEditingArtwall,
   getEditingArtwall
-} from './src/domain/artwallEditing.js'
+} from './domain/artwallEditing.js'
 import {
   onResizeHandlePointerDown,
   onResizeHandlePointerMove,
   onResizeHandlePointerUp,
   getIsResizingWithHandle
-} from './src/interaction/resizeHandles.js'
-import { animate } from './src/core/loop.js'
-import { getCurrentPaintingIndex } from './src/domain/currentPainting.js'
-import { detectWall } from "./src/core/order.js"
-import { registerDropEvents } from './src/ui/dropHandlers.js'
-import { registerPaintingDragHandlers } from './src/interaction/paintingDragHandlers.js';
-import { registerArtwallDragHandlers } from './src/interaction/artwallDragHandlers.js';
-import { setupQuillEditor } from "./src/ui/textEditor.js"
-import { registerGlobalInputBlocker } from './src/ui/globalInputBlocker.js'
+} from './interaction/resizeHandles.js'
+import { animate } from './core/loop.js'
+import { getCurrentPaintingIndex } from './domain/currentPainting.js'
+import { detectWall } from "./core/order.js"
+import { registerDropEvents } from './ui/dropHandlers.js'
+import { registerPaintingDragHandlers } from './interaction/paintingDragHandlers.js';
+import { registerArtwallDragHandlers } from './interaction/artwallDragHandlers.js';
+import { setupQuillEditor } from "./ui/textEditor.js"
+import { registerGlobalInputBlocker } from './ui/globalInputBlocker.js'
+import { markAsColorTexture } from "./core/colorManagement.js"
 
 let scene, camera, renderer, controls, raycaster, pointer, quill;
 
@@ -97,6 +98,32 @@ editingButtonsDiv.addEventListener("mousedown", function (e) {
 })
 
 const textureLoader = new THREE.TextureLoader()
+
+/* ─────────────────────────────────────────────────────────
+ * 글로벌 sRGB 훅: 이 loader로 로드되는 모든 텍스처를 sRGB로 표시
+ *  - 색 보정이 onLoad 타이밍에 적용되도록 보장
+ *  - 개별 모듈에서 중복 적용되어도 안전
+ * ───────────────────────────────────────────────────────── */
+;(() => {
+  const _origLoad = textureLoader.load.bind(textureLoader);
+  textureLoader.load = (url, onLoad, onProgress, onError) => {
+    return _origLoad(
+      url,
+      (tex) => {
+        try { markAsColorTexture(tex); } catch {}
+        tex.needsUpdate = true; // onLoad라 안전
+        onLoad && onLoad(tex);
+      },
+      onProgress,
+      onError
+    );
+  };
+})();
+
+// 일부 버전에서 색관리 플래그가 필요할 수 있음
+if (THREE.ColorManagement && 'enabled' in THREE.ColorManagement) {
+  THREE.ColorManagement.enabled = true;
+}
 
 async function init() {
   scene = createScene();
@@ -267,7 +294,7 @@ document.getElementById("settingsToggle").addEventListener("click", () => {
 
   if (isOpen) {
     if (currentId === "panel-background" && !getSkipCancelBackground()) {
-      onRestoreTextureSet() // ← 톱니로 닫을 때 롤백
+      onRestoreTextureSet() // 톱니로 닫을 때 롤백
     }
 
     if (currentId === "panel-paintings") {
@@ -361,11 +388,11 @@ async function initApp() {
     setupApplyButton(scene, textureLoader);
 
     // 썸네일 그리드 및 페이징 UI
-    setupArtwallPagination();       // ⬅ artwallGrid.js에서 import
-    populateArtwallGrid();          // ⬅ artwallGrid.js에서 import
+    setupArtwallPagination();       // artwallGrid.js에서 import
+    populateArtwallGrid();          // artwallGrid.js에서 import
 
-    setupPaintingPagination();      // ⬅ paintingGrid.js에서 import
-    populatePaintingGrid();         // ⬅ paintingGrid.js에서 import
+    setupPaintingPagination();      // paintingGrid.js에서 import
+    populatePaintingGrid();         // paintingGrid.js에서 import
 
     // 미리 선택된 텍스처 세트 적용
     const confirmedSet = getConfirmedTextureSet()
@@ -479,4 +506,3 @@ document.querySelectorAll('.shortcut-btn[data-role="panel-shortcut"]').forEach(b
     btn.classList.add('active');
   });
 });
-

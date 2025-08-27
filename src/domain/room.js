@@ -4,9 +4,11 @@ import {
   ROOM_WIDTH,
   ROOM_HEIGHT,
   ROOM_DEPTH,
-  PAINTING_Y_OFFSET,
-  WALL_OFFSET
+  PAINTING_Y_OFFSET
 } from "../core/constants.js";
+
+// 색상 텍스처 sRGB 표시 헬퍼
+import { markAsColorTexture } from "../core/colorManagement.js";
 
 /**
  * 갤러리 3D 방 구조(벽, 바닥, 천장)를 생성해 씬에 추가
@@ -36,6 +38,11 @@ export function createRoom(scene, textureLoader) {
     ),
   }
 
+  // floor/ceiling "색상 텍스처"로 sRGB 지정
+  ;["floor", "ceiling"].forEach((k) => {
+    markAsColorTexture(textures[k])
+  })
+
   textures.floor.wrapS = THREE.RepeatWrapping
   textures.floor.wrapT = THREE.RepeatWrapping
   textures.floor.repeat.set(5, 5)
@@ -43,10 +50,14 @@ export function createRoom(scene, textureLoader) {
   textures.ceiling.wrapS = THREE.RepeatWrapping
   textures.ceiling.wrapT = THREE.RepeatWrapping
   textures.ceiling.repeat.set(1, 1)
+
+  // 루프에 sRGB 지정 추가 + 기존 wrap/repeat 유지
   ;["front", "back", "left", "right"].forEach((side) => {
-    textures[side].wrapS = THREE.RepeatWrapping
-    textures[side].wrapT = THREE.RepeatWrapping
-    textures[side].repeat.set(2, 1)
+    const t = textures[side]
+    markAsColorTexture(t)                           // ← 추가: 벽 텍스처 sRGB 표시
+    t.wrapS = THREE.RepeatWrapping
+    t.wrapT = THREE.RepeatWrapping
+    t.repeat.set(2, 1)
   })
 
   const makeWall = (

@@ -14,6 +14,7 @@ import { updatePaintingOrderByPosition } from "../core/order.js";
 import { hidePaintingEditButtons } from "../ui/paintingEditButtons.js";
 import { endEditingPainting } from "./paintingEditing.js";
 import { removeResizeHandle } from "../ui/resizeHandle.js"; // 리사이즈 핸들 정리용
+import { markAsColorTexture } from "../core/colorManagement.js";
 
 /* === 내부 상태 배열 (외부에서 직접 export하지 않음) === */
 let paintings = [];              // 전체 그림(작품) mesh 배열
@@ -133,6 +134,8 @@ export async function loadAndAddPainting({
     textureLoader.load(
       url,
       (texture) => {
+        markAsColorTexture(texture); // 색상 텍스처 (sRGB)
+
         /* ── 크기 계산 ───────────────────────────── */
         const aspect  = texture.image.width / texture.image.height;
         let   width   = PAINTING_WIDTH_LIMIT;
@@ -145,7 +148,12 @@ export async function loadAndAddPainting({
         const depth = 0.1; // 그림의 두께
         const geo  = new THREE.BoxGeometry(width, height, depth);
 
-        const matFront = new THREE.MeshBasicMaterial({ map: texture }); // 앞면
+        // 앞면은 원본색 보존: 톤매핑 영향 제외
+        const matFront = new THREE.MeshBasicMaterial({
+          map: texture,
+          toneMapped: false
+        });
+
         const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
         const materials = [
           whiteMat, whiteMat, whiteMat, whiteMat, matFront, whiteMat

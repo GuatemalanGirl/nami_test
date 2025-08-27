@@ -5,6 +5,7 @@ import { ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH } from '../core/constants.js';
 import { safeUpdatePaintingOrder } from '../core/order.js';
 import { setArtwallMode } from './artwallMode.js';
 import { removeOutline } from '../ui/outline.js';
+import { markAsColorTexture } from '../core/colorManagement.js';
 
 let artwalls = []; // 확정된 아트월들
 let tempArtwalls = []; // 편집 중 아트월들
@@ -25,6 +26,7 @@ export function loadAndAddArtwall(data, position, rotationY, scene, textureLoade
     textureLoader.load(
       url,
       (texture) => {
+        markAsColorTexture(texture); // 색상 텍스처 (sRGB)
         const aspect = texture.image.width / texture.image.height;
         const height = ROOM_HEIGHT; // 항상 바닥에서 천장까지 채우기
         let width = height * aspect;
@@ -38,8 +40,9 @@ export function loadAndAddArtwall(data, position, rotationY, scene, textureLoade
         const mat = new THREE.MeshBasicMaterial({
           map: texture,
           transparent: true,
-          opacity: 0.8,
-        }); // 아트월 이미지에 투명도 적용
+          opacity: 0.8, // 아트월 이미지에 투명도 적용
+          toneMapped: false, // 톤매핑 바꿔도 아트월 색을 그대로 유지
+        }); 
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.copy(position);
         mesh.rotation.y = rotationY;

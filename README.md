@@ -1,27 +1,50 @@
 # NAMI
 
-**v5.0** – UI 스타일 시스템 리팩터링 및 통일성 개선
+**v5.1** – Vite 기반 빌드, GitHub Pages 배포 지원 / sRGB 색관리 적용
 
 ## Changelog
 
-### v5.0
-- **index.html**
-  - nav/social/settings 버튼 구조 변경 -> SVG 아이콘 기반으로 교체
-- **script.js**
+### v5.1
+- **프로젝트 구조**
+- nami_test/
+  ├─ index.html
+  ├─ script.js
+  ├─ public/
+  │  ├─ icons/                 # UI 아이콘(svg)  → 코드에서는 "icons/xxx.svg" 로 참조
+  │  └─ logo/                  # 로고 등
+  ├─ src/
+  │  ├─ core/
+  │  │  ├─ renderer.js         # WebGLRenderer 설정 (sRGB, toneMapping)
+  │  │  ├─ colorManagement.js  # markAsColorTexture 헬퍼
+  │  │  └─ ...                 # camera, scene, lighting, etc.
+  │  ├─ domain/                # 비즈니스 로직(painting, room, artwall, intro...)
+  │  ├─ ui/                    # UI 레이어(패널, 그리드, 버튼 등)
+  │  └─ styles/                # tokens/base/components/utilities.css
+  ├─ package.json
+  └─ vite.config.js
+- **vite.config.js**
+  - vite.config.js의 base를 /nami_test/로 설정
+- **public/icons**
+  - 기존 src/assets의 아이콘을 public/icons로 이관
+- **core/renderer.js**
+  - outputColorSpace=SRGB 설정
+- **core/colorManagement.js**
   - nav/social toggle 로직 개선 (class 적용 방식 보완)
-- **base.css**
-  - 전역 button 스타일 충돌 방지
-  - toggle 버튼에 투명 배경 적용
-- **components.css**
-  - nav-toggle, social-toggle 등 커스텀 버튼 스타일 추가
-  - settings-panel 스타일 개선 (border-radius, opacity, border animation 통일)
-- **tokens.css**
-  - 버튼 크기 및 여백 관련 토큰 값 조정
-  - settings panel 및 overlay에서 공통 적용할 수 있도록 radius/opacity 토큰 확장
+- **domain/room.js**
+  - 텍스처 onLoad 시점에 sRGB/wrap/repeat 설정
+- **domain/painting.js, domain/intro.js, ui/paintingEditButtons.js**
+  - 업로드/포스터 텍스처 sRGB 지정, toneMapped=false 적용, 스케일 보정 및 핸들/아웃라인 갱신
+- **ui/dropHandlers**
+  - 드롭 좌표 계산에 이벤트 객체 전달 (전역 window.event 의존 제거)
+- **domain/artwall.js**
+  - 편집/확정 정리 로직 다듬기 (렌더 상태 일관성)
+- **script.js**
+  - TextureLoader.load를 래핑하여 모든 로드 텍스처에 sRGB 표시
   
 ## Quick Start
 
 ```bash
 npm install      # 의존성 설치
 npm run dev      # http://localhost:5173
-npm run build    # 배포용 번들 생성
+npm run build    # 프로덕션 빌드 (dist/)
+npm run deploy   # GitHub Pages 배포 (gh-pages 브랜치로 dist push)

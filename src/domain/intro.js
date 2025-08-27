@@ -3,6 +3,7 @@
 import * as THREE from 'three'
 import { safeUpdatePaintingOrder } from '../core/order.js'
 import { setIntroMode } from './introMode.js'
+import { markAsColorTexture } from '../core/colorManagement.js'
 
 let tempIntroMeshes = []
 let originalIntroState = []
@@ -114,7 +115,8 @@ export function createPosterPlaneAt(position, currentWall, scene, paintings, tem
   const frontMat = new THREE.MeshBasicMaterial({
     color: 0xd1ecff,
     side: THREE.FrontSide,
-    transparent: false
+    transparent: false,
+    toneMapped: false, // 톤매핑 바꿔도 포스터 색을 그대로 유지
   })
   const poster = new THREE.Mesh(geometry, frontMat)
 
@@ -151,8 +153,9 @@ export function createPosterPlaneAt(position, currentWall, scene, paintings, tem
     // 색상 기억: UI에서 바꿀 때 참고 가능
     posterBackColor: backMat.color.getHex(),
     applyTexture: (texture) => {
+      markAsColorTexture(texture) // 포스터 텍스처는 sRGB 지정
       frontMat.map = texture
-      frontMat.color.set(0xffffff) // ✅ 이미지가 씌워질 때 배경색 영향 제거
+      frontMat.color.set(0xffffff) // 이미지가 씌워질 때 배경색 영향 제거
       frontMat.needsUpdate = true
     }
   }

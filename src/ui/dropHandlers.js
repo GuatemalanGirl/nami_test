@@ -73,7 +73,7 @@ export function handleArtwallDrop(rawData, scene, textureLoader) {
  * @param {THREE.Raycaster} raycaster
  * @param {Array} tempPaintings
  */
-export function handlePaintingDrop(rawData, scene, renderer, camera, raycaster, tempPaintings, textureLoader) {
+export function handlePaintingDrop(rawData, scene, renderer, camera, raycaster, tempPaintings, textureLoader, event) {
   let paintingData
   try {
     paintingData = JSON.parse(rawData)
@@ -261,7 +261,8 @@ export function registerDropEvents(domElement, {
         raycaster,
         getTempPaintings(),
         textureLoader,
-        getPaintings
+        getPaintings,
+        e // 드롭 이벤트 객체도 전달
       )
       return // 그림 작업 끝, 아래 intro용 드롭 실행 안함
     }
