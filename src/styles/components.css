@@ -42,7 +42,7 @@
 #rightButton {
   width: 48px;
   height: 80px;
-  background-image: url("..//navRight.svg");
+  background-image: url("../icons/navRight.svg");
 }
 #rightButton:hover {
   background-image: url("../icons/navRightHover.svg");
