@@ -73,7 +73,7 @@ export function showPaintingEditButtons(mesh, scene, camera, controls, quill) {
   // 크기조절 버튼
   const resizeBtn = document.createElement("button")
   resizeBtn.classList.add("icon-btn", "md")
-  resizeBtn.innerHTML = `<img src="/icons/editSize.svg" alt="크기조절" />`
+  resizeBtn.innerHTML = `<img src="icons/editSize.svg" alt="크기조절" />`
   // 여기에 핸들러 모드 진입 트리거 추가
   resizeBtn.onclick = () => {
     // 클릭 시점에 최신 대상 재조회(확인 직후 stale 참조 방지)
@@ -95,7 +95,7 @@ export function showPaintingEditButtons(mesh, scene, camera, controls, quill) {
   if (mesh.userData.isPainting && !mesh.userData.type?.startsWith("intro") && mesh.userData.type !== 'poster') {
     const storyBtn = document.createElement("button")
     storyBtn.classList.add("icon-btn", "md")
-    storyBtn.innerHTML = `<img src="/icons/editText.svg" alt="작품이야기" />`
+    storyBtn.innerHTML = `<img src="icons/editText.svg" alt="작품이야기" />`
     storyBtn.onclick = () => showPaintingStoryEditor(mesh, scene, camera, controls, quill)
     editingButtonsDiv.appendChild(storyBtn)
   }
@@ -106,8 +106,8 @@ export function showPaintingEditButtons(mesh, scene, camera, controls, quill) {
     captionToggleBtn.classList.add("icon-btn", "md")
     
     // 상태별 아이콘 경로
-    const ICON_ON  = "/icons/navInfo.svg"
-    const ICON_OFF = "/icons/navInfoOff.svg"
+    const ICON_ON  = "icons/navInfo.svg"
+    const ICON_OFF = "icons/navInfoOff.svg"
 
     // 최신 대상/캡션 포인터를 클릭 시마다 갱신
     const resolveAndSetIcon = () => {
@@ -151,7 +151,7 @@ export function showPaintingEditButtons(mesh, scene, camera, controls, quill) {
   if (mesh.userData.type === "intro-frame" && getIntroMode()) {
     const colorBtn = document.createElement("button")
     colorBtn.classList.add("icon-btn", "md")
-    colorBtn.innerHTML = `<img src="/icons/editColor.svg" alt="프레임색상" />`
+    colorBtn.innerHTML = `<img src="icons/editColor.svg" alt="프레임색상" />`
     colorBtn.onclick = () => showFrameColorPicker(mesh, editingButtonsDiv, scene, camera, controls, quill)
     editingButtonsDiv.appendChild(colorBtn)
   }
@@ -162,7 +162,7 @@ export function showPaintingEditButtons(mesh, scene, camera, controls, quill) {
   if (isIntro && getIntroMode()) {
     const editTextBtn = document.createElement("button")
     editTextBtn.classList.add("icon-btn", "md")
-    editTextBtn.innerHTML = `<img src="/icons/editText.svg" alt="텍스트입력" />`
+    editTextBtn.innerHTML = `<img src="icons/editText.svg" alt="텍스트입력" />`
     editTextBtn.onclick = () => focusIntroWithEditor(mesh, camera, controls, quill) // 아래 별도 정의
     editingButtonsDiv.appendChild(editTextBtn)
   }
@@ -171,7 +171,7 @@ export function showPaintingEditButtons(mesh, scene, camera, controls, quill) {
   if (mesh.userData.type === 'poster') {
     const uploadBtn = document.createElement("button")
     uploadBtn.classList.add("icon-btn", "md")
-    uploadBtn.innerHTML = `<img src="/icons/editPoster.svg" alt="포스터 올리기" />`
+    uploadBtn.innerHTML = `<img src="icons/editPoster.svg" alt="포스터 올리기" />`
     uploadBtn.onclick = () => openPosterFilePicker(mesh)
     editingButtonsDiv.appendChild(uploadBtn)
   }
@@ -182,7 +182,7 @@ export function showPaintingEditButtons(mesh, scene, camera, controls, quill) {
   // 삭제 버튼
   const deleteBtn = document.createElement("button")
   deleteBtn.classList.add("icon-btn", "md")
-  deleteBtn.innerHTML = `<img src="/icons/editDelete.svg" alt="삭제" />`
+  deleteBtn.innerHTML = `<img src="icons/editDelete.svg" alt="삭제" />`
   deleteBtn.onclick = () => {
     // parent가 없으면 씬에서 이름으로 최신 객체 찾기
     const target = mesh?.parent 
