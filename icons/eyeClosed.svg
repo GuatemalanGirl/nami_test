@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 15" fill="none" preserveAspectRatio="xMidYMid meet">
+<ns0:path d="M37.1538 1.99936C31.9925 6.73821 18.1486 13.5515 4.0624 2.89361" stroke="black" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+<ns0:line x1="37.2" y1="7.55898" x2="35.4621" y2="5.24174" stroke="black" stroke-width="4" stroke-linecap="round" />
+<ns0:line x1="2" y1="-2" x2="4.89655" y2="-2" transform="matrix(0.6 -0.8 -0.8 -0.6 0 7.95898)" stroke="black" stroke-width="4" stroke-linecap="round" />
+<ns0:line x1="20.0693" y1="12.8555" x2="20.0693" y2="9.95892" stroke="black" stroke-width="4" stroke-linecap="round" />
+</ns0:svg>
