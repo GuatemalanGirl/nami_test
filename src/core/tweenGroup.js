@@ -7,7 +7,7 @@
 // 루프(animate)에서 group.update(time)으로 프레임마다 업데이트를 실행해야 애니메이션이 정상 동작한다.
 //
 // 사용 예:
-//   import { tweenGroup } from './core/tweenGroup.js';
+//   import { tweenGroup } from './src/core/tweenGroup.js';
 //   import { Tween } from '@tweenjs/tween.js';
 //   new Tween(obj, tweenGroup).to(...).start();
 //
