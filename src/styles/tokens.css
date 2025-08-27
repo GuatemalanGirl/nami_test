@@ -1,0 +1,114 @@
+/* tokens.css */
+
+:root{
+  /* 버튼 색 */
+  --color-accent: #ffffff;
+  --color-accent-hover: #ffffff;
+
+  /* 네비 버튼 색 */
+  --color-primary: #5adbcc;
+  --color-primary-hover: #ff8b79;
+
+  /* 공통 배경(흰) */
+  --color-bg-light: #ffffff;
+
+  /* 라운드 */
+  --radius-md: 15px;  /* 일반 버튼, nav 버튼 */
+  --radius-lg: 28px;  /* 토글 버튼 */
+
+  /* 간격 */
+  --gap-sm: 10px;     /* direction-row 등 */
+
+  /* 그림자 */
+  --shadow-sm: 0 2px 6px rgba(0,0,0,.3); /* 토글 버튼 */
+
+  /* 모달 */
+  --modal-bg: rgba(255, 255, 255, 0.9);
+  --shadow-modal: 0 4px 10px rgba(0, 0, 0, 0.3);
+
+  /* 로딩 오버레이 배경 */
+  --overlay-bg: rgba(255, 255, 255, 0.95);
+
+  /* 로딩 오버레이가 최상단에 오도록 (instructionOverlay=999보다 큼) */
+  --z-loading: 1000;
+
+  /* 느린 페이드 전환 시간 */
+  --transition-slow: 1s;
+
+  /* 사용설명서 오버레이 */
+  --overlay-dark: rgba(0, 0, 0, 0.7);     /* 사용설명서 오버레이 배경(어두운 반투명) */
+  --instruction-panel-bg: rgba(255,255,255,0.1); /* 안내 패널 내부 박스 배경(옅은 흰) */
+  --z-instruction: 999;                   /* 로딩 오버레이(1000) 바로 아래 레벨 */
+
+  /* 설정창 너비(슬라이드 거리와 동일하게 유지) */
+  --settings-panel-width: min(90vw, 400px);
+
+  /* 패널 배경 & 슬라이드 배경 & 패널 그림자 */
+  --panel-bg: rgba(200, 200 , 200, 0.1);
+  --panel-slide-bg: rgba(200, 200 , 200, 0.1);
+  --panel-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+
+  /* 입력창 테두리 */
+  --input-border: #5adbcc;
+
+  /* 메뉴 hover 색 (없으면 코랄로 폴백) */
+  --menu-hover-color: #ff8b79;
+
+  --z-gallery-info: 997;        /* #loading(1000), #instruction(999), toggle(998)보다 낮게 */
+  --gallery-text-color: #000;   /* 텍스트 색(검정) */
+  /* 원하면 배경/그림자도 토큰화 가능:
+     --gallery-bg: rgba(255,255,255,.7);
+     --gallery-shadow: 0 2px 8px rgba(0,0,0,.2); */
+
+  /* 배경 텍스처 그리드 */   
+  --gap-md: 20px; /* 공용 md 간격: 그리드 상단/벽면 네비 margin 등 */
+  /* 선택: 텍스처 hover 테두리 색을 따로 쓰고 싶으면 */
+  /* --texture-hover-border: #ff8b79; */
+
+  /* 벽면 설정 네비게이션 (작품선택, 전시서문쓰기, 아트월설정 패널 공통) */
+  --color-text: #333; /* 라벨 기본 텍스트색 */
+
+  /* 작품선택/전시서문쓰기/아트월설정 그리드 */
+  --gap-lg: 25px;              /* 전시서문 오브젝트 그리드 간격 */
+  --color-border-light: #bbb;  /* 기본 테두리(오브젝트 썸네일) */
+
+  --grid-ctrl-bg: #ffd3b6;         /* 그리드 컨트롤 버튼 배경 */
+  --grid-ctrl-bg-hover: #ffb48f;   /* 컨트롤 버튼 hover 배경 */
+
+  /* 전시서문쓰기 텍스트 입력 오버레이 */
+  --editor-overlay-bg: rgba(255, 255, 255, 0.96); /* 에디터 오버레이 배경(거의 흰) */
+  --editor-shadow: 0 4px 20px rgba(0, 0, 0, 0.14); /* 에디터 오버레이 그림자 */
+
+  /* Quill 텍스트 에디터*/
+  --editor-paragraph-gap: 6px;           /* 에디터 문단 간격 */
+  --editor-white-outline-color: #222;    /* 흰 글자 외곽선 색 */
+
+  /* textarea 오버레이 */
+  --overlay-panel-bg: rgba(255, 255, 255, 0.96);  /* 오버레이 패널 배경(거의 흰) */
+  --overlay-panel-shadow: 0 4px 24px rgba(0,0,0,.13); /* 오버레이 패널 그림자 */
+  --z-overlay-panel: 1200;                         /* 오버레이 레이어 순서(최상위) */
+
+  /* 프레임서문 색상 지정 팔레트 */
+  --gap-swatch: 14px;   /* 색상 스와치 사이 간격 */
+  --swatch-size: 36px;  /* 스와치 지름 */
+
+  /* 소셜 패널: 크기/레이어 */
+  --social-panel-width: min(90vw, 400px); /* 패널 너비 */
+  --social-panel-height: 50vh;            /* 패널 높이(토글 이동에 재사용) */
+  --social-toggle-size: 56px;             /* 토글 버튼 크기 */
+  --z-social: 999;                        /* instruction(999)와 같은 레벨 → DOM 순서로 위/아래 결정 */
+
+  /* 소셜 패널: 색/배경/테두리 */
+  --social-bg: #fff;                      /* 패널 배경 */
+  --social-list-bg: #fafafa;              /* 리스트/입력 배경 */
+  --social-input-bg: #fff;                /* 입력 영역 배경 */
+  --social-shadow: 0 2px 12px rgba(0,0,0,.16);
+  --border-subtle: #eee;
+  --border-mid: #dbdbdb;
+
+  /* 소셜 패널: 액션/상태 */
+  --action-blue: #0095f6;                 /* 제출/확인 버튼 파랑 */
+  --award-section-bg: #f8fafc;
+  --award-hover-bg: #e3f2fd;
+  --award-hover-border: #87cefa;
+}

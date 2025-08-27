@@ -1,0 +1,109 @@
+/* ===== Base: body / canvas / button ===== */
+
+body {
+  margin: 0;
+  cursor: grab;
+}
+body:active {
+  cursor: grabbing;
+}
+
+canvas {
+  display: block;
+}
+canvas.hovering {
+  cursor: pointer !important;
+}
+canvas.grab {
+  cursor: grab !important;
+}
+canvas.grab:active {
+  cursor: grabbing !important;
+}
+
+/* 전역 버튼 기본값 (색/반경은 토큰 사용) */
+button {
+  font-size: 20px;
+  padding: 10px 20px;
+  margin: 5px;
+  border-radius: 15px;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  background-color: var(--color-accent);
+  color: var(--color-bg-light);
+  border: none;
+  transition: background-color 0.3s ease;
+
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+button:hover {
+  background-color: var(--color-accent-hover);
+}
+
+/* ───────── Icon Button (공통) ─────────
+   - SVG/Icon 전용 버튼 스타일
+   - 기본 크기 2종(sm, md) 지원
+   - 작품 편집 / 공통 액션 버튼에 모두 사용
+───────────────────────────────────────*/
+.icon-btn {
+  all: unset; /* base.css 전역 button 스타일 초기화 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  border: 1px solid #5AD8CC;
+  box-sizing: border-box;
+  background-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  border: 3px solid #FF8B79;
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+.icon-btn img,
+.icon-btn svg {
+  pointer-events: none; /* 아이콘 클릭 방해 방지 */
+}
+
+/* ───────── Size Presets ───────── */
+/* 작은 버튼 (작품 편집 기능용) */
+.icon-btn.sm {
+  width: 40px;
+  height: 40px;
+}
+.icon-btn.sm img,
+.icon-btn.sm svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 큰 버튼 (닫기, 확인, 취소 등 공통 액션용) */
+.icon-btn.md {
+  width: 50px;
+  height: 50px;
+}
+.icon-btn.md img,
+.icon-btn.md svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* 작품 편집 하단 버튼 영역 */
+#paintingEditButtons {
+  display: flex;             /* 가로 정렬 */
+  justify-content: center;   /* 가운데 배치 */
+  align-items: center;       /* 수직 가운데 정렬 */
+  gap: 10px;                 /* 버튼 사이 간격 */
+  position: fixed;
+  left: 50%;
+  bottom: 0px;
+  transform: translateX(-50%);
+  z-index: 1001;
+}

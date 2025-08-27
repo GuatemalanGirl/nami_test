@@ -1,0 +1,12 @@
+/* ===== Utilities: row layout ===== */
+
+.direction-row {               /* 기존 클래스 유지 (원하면 유틸로 대체 가능) */
+  display: flex;
+  flex-direction: row;
+  gap: var(--gap-sm);
+}
+
+/* 선택지: 새 유틸 조합으로 대체할 수도 있음
+   <div class="flex flex-row gap-1"> … </div>
+   .flex { display:flex; } .flex-row { flex-direction:row; } .gap-1 { gap:var(--gap-sm); }
+*/

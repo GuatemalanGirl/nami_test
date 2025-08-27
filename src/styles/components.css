@@ -1,0 +1,1588 @@
+/* ===== Components: Logo ===== */
+
+.logo {
+  position: fixed;
+  top: 40px;
+  left: 40px;
+  width: 80px;
+  height: auto;
+}
+
+/* ===== Components: Nav Buttons (IDs 호환 유지 + background-image 방식) ===== */
+
+/* 공통 스타일 */
+.nav-icon {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.3s ease, transform 0.2s ease, background-image 0.2s;
+}
+
+/* 개별 크기 + 아이콘 이미지 */
+#infoButton {
+  width: 55px;
+  height: 64px;
+  background-image: url("../assets/img/icons/navInfo.svg");
+}
+#infoButton:hover {
+  background-image: url("../assets/img/icons/navInfoHover.svg");
+}
+
+#leftButton {
+  width: 48px;
+  height: 80px;
+  background-image: url("../assets/img/icons/navLeft.svg");
+}
+#leftButton:hover {
+  background-image: url("../assets/img/icons/navLeftHover.svg");
+}
+
+#rightButton {
+  width: 48px;
+  height: 80px;
+  background-image: url("../assets/img/icons/navRight.svg");
+}
+#rightButton:hover {
+  background-image: url("../assets/img/icons/navRightHover.svg");
+}
+
+#homeButton {
+  width: 47px;
+  height: 65px;
+  background-image: url("../assets/img/icons/navHome.svg");
+}
+#homeButton:hover {
+  background-image: url("../assets/img/icons/navHomeHover.svg");
+}
+
+/* 네비게이션 버튼 컨테이너 */
+.nav-buttons {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;   /* 위: info, 가운데: 좌우, 아래: home */
+  align-items: center;
+  gap: 20px;                /* info ↔ row ↔ home 간격 */
+  z-index: 1;
+  transition: transform 0.4s ease;
+}
+.nav-buttons.slide-down {
+  transform: translate(-50%, 200px);
+  pointer-events: none;
+}
+
+/* 방향 버튼 가로 배치 */
+.nav-buttons .direction-row {
+  display: flex;
+  justify-content: center;
+  gap: 140px;       /* 좌우 버튼 간격 */
+  position: absolute;
+  bottom: 20px;     /* 화면 하단에서 거리 */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nav-icon:active {
+  transform: scale(0.95);
+}
+
+/* nav-toggle 리셋 & 강제 투명 배경 */
+.nav-toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  outline: none;
+
+  /* 위치/크기/이미지 */
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  opacity: 0.7;
+  cursor: pointer;
+  transition: transform 0.2s;
+
+  /* 배경(색+이미지) 한 번에 명시: hover 때도 색이 바뀌지 않도록 */
+  background: transparent url("../assets/img/icons/eyeOpen.svg") center/contain no-repeat !important;
+}
+
+/* OFF hover */
+.nav-toggle:hover {
+  background: transparent url("../assets/img/icons/eyeOpenHover.svg") center/contain no-repeat !important;
+}
+
+/* ON */
+.nav-toggle.active {
+  background: transparent url("../assets/img/icons/eyeClosed.svg") center/contain no-repeat !important;
+}
+
+/* ON hover */
+.nav-toggle.active:hover {
+  background: transparent url("../assets/img/icons/eyeClosedHover.svg") center/contain no-repeat !important;
+}
+
+.nav-toggle:active { transform: scale(0.95); }
+
+/* 혹시 전역 button:hover 규칙이 있다면 이것도 방어 */
+button.nav-toggle:hover {
+  background-color: transparent !important;
+}
+
+/* '작품이야기'를 보여주는 모달창 (#infoModal) */
+#infoModal {
+  display: none;
+  position: fixed;
+  top: 10%;
+  right: 10%;
+  background-color: var(--modal-bg, rgba(255, 255, 255, 0.9));
+  border-radius: var(--radius-md);
+  padding: 20px;
+  z-index: 995;
+  width: 300px;
+  max-height: 1000px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-modal, 0 4px 10px rgba(0, 0, 0, 0.3));
+}
+
+#infoModal h2 {
+  margin-top: 0;
+}
+
+.info-close-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px; /* 기존 유지 */
+}
+
+/* 스토리 편집 완료 후 위치 */
+#infoModal.story-finished {
+  top: 10%;
+  left: 50%;   /* 왼쪽으로 이동 */
+  right: auto; /* 오른쪽 속성 해제 */
+}
+
+
+/* 웹앱 처음 실행할때 "로딩중.." 오버레이 */
+#loadingScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--overlay-bg, rgba(255, 255, 255, 0.95));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  font-weight: bold;
+  z-index: var(--z-loading, 1000);
+  transition: opacity var(--transition-slow, 1s) ease;
+}
+#loadingScreen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 처음 시작시 조작법 등 사용설명서 오버레이 */
+#instructionOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--overlay-dark, rgba(0, 0, 0, 0.7));
+  color: var(--color-bg-light, #fff);
+  z-index: var(--z-instruction, 999);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* 사용설명서 오버레이 내부 컨텐츠 박스 */
+#instructionOverlay .instructionContent {
+  background-color: var(--instruction-panel-bg, rgba(255, 255, 255, 0.1));
+  padding: 40px;
+  border-radius: var(--radius-md, 20px);
+  font-size: 24px;
+  max-width: 600px;
+}
+
+/* 오버레이 한정 리스트 리셋 */
+#instructionOverlay ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 설정 아이콘 버튼 */
+.settings-icon {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  opacity: 0.7;
+  cursor: pointer;
+  z-index: 998;
+  line-height: 1;
+  transition: transform 0.4s ease-in-out;
+}
+
+/* hover 효과 */
+.settings-icon:hover {
+  content: url("../assets/img/icons/settingsButtonHover.svg");
+  opacity: 0.7;
+  transform: scale(1.1);
+}
+
+/* active 효과 */
+.settings-icon:active {
+  transform: scale(0.95);
+}
+
+.settings-icon.moving {
+  /* 설정창 너비+ 만큼 이동 */
+  /* transform: translateX(-300px)를 calc(-1 * var(--settings-panel-width))로 바꿔서,
+    데스크톱(300px)뿐 아니라 모바일에서 100vw로 바뀔 때도 자동으로 맞춰짐 */
+  transform: translateX(calc(-1 * var(--settings-panel-width, 300px)));
+  transition: transform 0.4s ease-in-out;
+}
+
+/* 테두리 애니메이션 정의 */
+@keyframes panelBorderCycle {
+  0%   { border-color: #ff8b79; box-shadow: inset 0 0 15px #ff8b79; }
+  25%  { border-color: #ffba79; box-shadow: inset 0 0 15px #ffba79; }
+  50%  { border-color: #8cda54; box-shadow: inset 0 0 15px #8cda54; }
+  75%  { border-color: #5ad8cc; box-shadow: inset 0 0 15px #5ad8cc; }
+  100% { border-color: #ff8b79; box-shadow: inset 0 0 15px #ff8b79; }
+}
+
+/* 설정 패널 기본 위치: 화면 밖 */
+.settings-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: var(--settings-panel-width, min(90vw, 400px));
+  height: 100vh;
+  background: var(--panel-bg, rgba(200, 200 , 200, 0.1));
+  box-shadow: var(--panel-shadow, -2px 0 8px rgba(0, 0, 0, 0.2));
+  border-radius: var(--radius-md, 20px);
+  z-index: 996;
+  transform: translateX(100%);
+  transition: transform 0.4s ease-in-out;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+  .settings-panel {
+    height: 100dvh; /* 모바일 브라우저 주소창 고려한 안전한 높이 */
+  }
+}
+
+/* 안쪽 테두리 효과 */
+.settings-panel::before {
+  content: "";
+  position: absolute;
+  top: 2px;   /* 상단 여백 → 안쪽으로 이동 */
+  left: 2px;  /* 왼쪽 여백 */
+  right: 2px; /* 오른쪽 여백 */
+  bottom: 2px;/* 하단 여백 */
+  border-radius: inherit;
+  border: 3px solid #ff8b79; /* 시작 색 */
+  animation: panelBorderCycle 20s ease-in-out infinite; /* 테두리 애니메이션 */
+  pointer-events: none; /* 클릭 방해하지 않음 */
+}
+
+.settings-panel.open {
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.settings-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.settings-logo {
+  position: absolute;
+  top: 0;       
+  right: 0;
+  transform: none;
+  width: 220px;
+  height: 220px;
+  opacity: 0.9;    /* 워터마크 느낌 */
+  pointer-events: none; /* 클릭 방해하지 않음 */
+}
+
+.settings-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  background: var(--panel-slide-bg, rgba(200, 200 , 200, 0.1));
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(100%);
+  transition: all 0.4s ease-in-out;
+  z-index: 0;
+}
+
+.settings-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+  z-index: 2;
+}
+
+
+/* 항상 패널 "전체 폭" 기준으로 중앙정렬되는 상단 bar */
+:root{
+  /* 필요하면 높이도 변수로 관리 */
+  --shortcut-bar-height: 52px;
+}
+
+/* 바로가기 바 래퍼: 패널 내부 상단 고정 + 중앙 정렬 */
+.settings-slide .panel-shortcut{
+  position: sticky;
+  top: 0;
+  z-index: 3;
+
+  display: flex;
+  justify-content: center;   /* ← 항상 중앙 정렬 */
+  align-items: center;
+  gap: var(--shortcut-gap, 3px);
+
+  /* 부모의 좌우 padding을 상쇄해서 '패널 전체 폭'으로 확장 */
+  width: calc(100% + var(--panel-gutter-left) + var(--panel-pad-right));
+  margin-left: calc(-1 * var(--panel-gutter-left));
+  margin-right: calc(-1 * var(--panel-pad-right));
+
+  /* 세로 여백만 주고, 좌우는 0 (중앙 유지) */
+  padding: 8px 0;
+  background: transparent;   /* 필요시 유지/변경 */
+  border: 0;
+  box-sizing: border-box;
+  height: var(--shortcut-bar-height);
+}
+
+/* 바로가기 버튼: 전역 button 규칙을 '이 범위에서만' 덮어씀 */
+.settings-slide .panel-shortcut .shortcut-btn[data-role="panel-shortcut"]{
+  /* 전역 규칙 덮어쓰기(특이성 ↑) */
+  box-sizing: border-box !important;
+  width: 45px !important;
+  height: 45px !important;
+  flex: 0 0 45px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  margin: 0 !important;
+
+  /* 둥근 모서리 15px + 기본 테두리/배경 지정 */
+  border-radius: 15px;
+  border: 1px solid #5AD8CC;
+  background: #ffffff;
+  color: inherit;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* 상단 바로가기 바(두 클래스 모두 지원) */
+.settings-slide .panel-shortcut,
+.settings-slide .shortcut-bar {
+  display: flex;
+  gap: var(--shortcut-gap, 3px);
+  justify-content: center;
+  align-items: center;
+  background: transparent !important;
+  background-color: transparent !important; /* 안전빵 */
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* 상태 */
+.settings-slide .panel-shortcut .shortcut-btn[data-role="panel-shortcut"]:hover{
+  /* ▼ 변경: hover 시 코랄 3px 테두리, 배경은 흰색 유지 */
+  border: 3px solid #FF8B79;
+  background: #FFF;
+}
+
+.settings-slide .panel-shortcut .shortcut-btn[data-role="panel-shortcut"]:active{
+  transform: scale(0.95);
+}
+
+.settings-slide .panel-shortcut .shortcut-btn[data-role="panel-shortcut"].is-active{
+  background: #4b8bff;
+  color: #fff;
+  /* 선택 상태에서 테두리를 숨기고 싶다면 ↓ 주석 해제
+  border-color: transparent;
+  */
+}
+
+/* 버튼 내 아이콘 크기 */
+.settings-slide .panel-shortcut .shortcut-btn[data-role="panel-shortcut"] > svg,
+.settings-slide .panel-shortcut .shortcut-btn[data-role="panel-shortcut"] > img{
+  width: 25px; height: 25px; display: block; pointer-events: none;
+}
+
+/* 라벨과 입력창 간격 */
+.settings-slide label {
+  display: block;        /* 블록 요소로 만들어야 margin이 확실히 적용됨 */
+  margin-bottom: 10px;    /* 라벨과 바로 밑 인풋 간격 */
+  font-weight: 500;
+  font-size: 16px;
+}
+
+/* 전시명/전시기간 입력창 */
+.settings-slide input[type="text"],
+.settings-slide input[type="date"] {
+  display: block;
+  width: 260px;
+  padding: 12px;
+  margin: 0 auto 20px; /* auto -> 좌우 가운데 정렬 */
+  border-radius: var(--radius-sm, 15px);
+  border: 1px solid var(--input-border, #ccc);
+  font-size: 16px;
+}
+
+/* 메뉴 리스트 */
+.settings-menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm, 10px);
+}
+
+/* 아이콘 크기 */
+.settings-menu .menu-icon {
+  width: 60px;
+  height: 60px;
+  display: block;
+  pointer-events: none;
+  flex: 0 0 22px;
+}
+
+.settings-menu button {
+  all: unset; /* 모든 버튼 기본 스타일 제거! */
+  display: flex;
+  width: 100%;
+  text-align: left;
+  align-items: center;
+  gap : 30px;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px 0;
+  color: #000000;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* 살짝 구분선 */
+}
+
+.settings-menu button:hover {
+  color: var(--menu-hover-color, #ff8b79); /* 호버할 때 컬러 변경 */
+}
+
+/* 하단 버튼 행 */
+.button-row {
+  display: flex;
+  justify-content: center; /* 좌우로 나눔 */
+  gap: var(--gap-sm, px); /* 버튼 사이 간격 */
+  width: calc(100% + var(--panel-gutter-left) + var(--panel-pad-right));
+  margin-left: calc(-1 * var(--panel-gutter-left));
+  margin-right: calc(-1 * var(--panel-pad-right));
+  margin-top: 40px; /* 필요시 var(--gap-md, 20px)로 교체 가능 */
+}
+
+.button-row button {
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  padding: 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.button-row button:active {
+  transform: scale(0.95);
+}
+
+.button-row button img,
+.button-row button svg {
+  width: 40px;
+  height: 40px;
+  display: block;
+  pointer-events: none;         /* 클릭 방해 제거 */
+}
+
+/* 확인 버튼 */
+.saveExhibitButton {
+  background-color: var(--color-accent);
+  border: 1px solid #ff8b79;
+}
+.saveExhibitButton:hover {
+  border: 3px solid #FF8B79;
+}
+
+/* 뒤로 버튼 */
+.backToMainBtn {
+  background-color: var(--color-accent);
+  border: 1px solid #5AD8CC;
+}
+.backToMainBtn:hover {
+  border: 3px solid #5ad8cc;
+}
+
+/* 전시 공개 토글 기본 변수 */
+.switch {
+  --w: 80px;         /* 전체 너비 */
+  --h: 45px;         /* 전체 높이 */
+  --pad: 3px;        /* 트랙 안쪽 패딩 */
+  --thumb: calc(var(--h) - var(--pad) * 2);
+  --on-bg: #ff8b79;     /* 비공개 색 */
+  --off-bg:  #5adbcc;     /* 공개 색*/
+  --thumb-bg: #fff;
+  
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* 크기 프리셋 */
+.switch[data-size="sm"] { --w: 48px; --h: 24px; }
+.switch[data-size="lg"] { --w: 80px; --h: 40px; }
+
+.switch > input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch .track {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  box-sizing: border-box;
+  border-radius: 15px;
+  background: var(--off-bg);
+  padding: var(--pad);
+  transition: background-color .2s ease, box-shadow .2s ease;
+  display: inline-block;
+}
+
+/* 스위치 썸 */
+.switch .thumb {
+  position: relative;
+  z-index: 1;
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 15px;
+  background: var(--thumb-bg);
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+  transform: translateX(0);
+  transition: transform .22s ease;
+  display: block;
+}
+
+/* 체크 시 상태 전환 */
+.switch > input:checked + .track {
+  background: var(--on-bg);
+}
+.switch > input:checked + .track .thumb {
+  transform: translateX(calc(var(--w) - var(--thumb) - var(--pad) * 2));
+}
+
+/* 모션 민감 사용자 */
+@media (prefers-reduced-motion: reduce) {
+  .switch .track, .switch .thumb { transition: none; }
+}
+
+.switch-wrapper {
+  display: inline-flex;
+  align-items: center; /* 세로 가운데 맞춤 */
+  gap: 20px;           /* 스위치와 텍스트 간격 */
+}
+
+.switch-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #000000;
+}
+
+/* 전시명/전시기간 표시 */
+#galleryInfo {
+  position: fixed;
+  top: 100px;
+  left: 40px;
+
+  /*background-color: rgba(255, 255, 255, 0.7);*/
+  /*padding: 10px 15px;*/
+  border-radius: var(--radius-sm, 10px);
+  /*font-size: 14px;*/
+  line-height: 1.4;
+  z-index: var(--z-gallery-info, 997); /* 로고보다 아래, 설정창보다 위 정도 */
+  max-width: 250px;
+  /*box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);*/
+  pointer-events: none; /* 클릭 방지 */
+}
+
+#galleryInfo .title {
+  font-size: 25px;
+  color: var(--gallery-text-color, #000000);
+  font-weight: bold;
+  white-space: nowrap;        /* 줄바꿈 방지 */
+}
+
+#galleryInfo .period {
+  font-size: 20px;
+  color: var(--gallery-text-color, #000000);
+}
+
+/* 배경 패널: 고정 정사각형 박스 (버튼 + 그리드 포함) */
+.background-grid-placeholder {
+  width: 105%;                  /* 패널 가로폭의 105% */
+  max-width: none;              /* 원하는 최대 크기 */
+  position: relative;           /* 버튼 배치 기준 */
+  left: 50%;                    /* 부모의 가운데로 이동 */
+  transform: translateX(-50%);
+  aspect-ratio: 1 / 1;          /* 항상 정사각형 */
+  background: rgba(0, 0, 0, 0.1); /* 살짝 보이는 배경 (위치 확인용) */
+  border-radius: var(--radius-md, 20px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 배경 썸네일 그리드 래퍼 */
+.background-grid-wrapper {
+  display: inline-block;        /* 그리드 크기만큼 감싸기 */
+  width: 95%;                   /* placeholder 안에서 살짝 여유 */
+  height: 95%;
+}
+
+/* 배경 썸네일 그리드 */
+.background-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gap-sm, 10px);
+  margin-top: 0;                /* placeholder 내부에 맞게 margin 제거 */
+  width: 100%;                  /* 부모 placeholder에 꽉 차도록 */
+  height: 100%;                 /* 부모 placeholder 높이에 맞춤 */
+  aspect-ratio: unset;          /* 비율은 background-grid-placeholder가 담당 */
+  /* 항상 정사각형 박스 → background-grid-placeholder에서 관리 */
+}
+
+/* 개별 배경 썸네일 (작품 썸네일과 동일한 모양) */
+.texture-option {
+  width: 100%;
+  aspect-ratio: 1 / 1;          /* 정사각형으로 맞추기 */
+  border-radius: var(--radius-sm, 10px);
+  overflow: hidden;
+  cursor: grab;                 /* grab 모양 (작품 썸네일과 동일) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  box-sizing: border-box;        /* border 포함해도 크기 유지 */
+  border: 2px solid var(--color-border-light, #bbb);
+}
+
+.texture-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;            /* 꽉 채우기 */
+  display: block;
+  border-radius: inherit;
+}
+
+.texture-option:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+  border: 2px solid var(--color-primary-hover, #ff8b79); /* 두께는 항상 2px, 색만 변경 */
+}
+
+.texture-option.is-selected {
+  border-color: var(--color-primary-hover, #ff8b79);
+}
+
+/* 배경 패널: 좌우 컨트롤 아이콘 (Prev/Next) */
+.background-grid-placeholder .grid-nav-icon {
+  position: absolute;           /* background-grid-placeholder 기준 */
+  top: 50%;                     /* 세로 중앙 */
+  transform: translateY(-50%);
+  width: 25px;                  /* 아이콘 크기 */
+  height: auto;
+  cursor: pointer;
+  opacity: 0.4;                 /* 기본 반투명 */
+  transition: opacity 0.2s, filter 0.2s;
+  z-index: 10;
+}
+
+/* 좌우 위치 */
+.background-grid-placeholder .grid-nav-icon.prev { left: -35px; }
+.background-grid-placeholder .grid-nav-icon.next { right: -35px; }
+
+/* hover 효과 */
+.background-grid-placeholder .grid-nav-icon:hover {
+  opacity: 0.6;
+  filter: brightness(1.2);
+}
+
+.background-grid-placeholder .grid-nav-icon:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* 벽면 설정 네비게이션 (작품선택, 전시서문쓰기, 아트월설정 패널 공통) */
+.wall-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--gap-md, 20px);
+  margin-bottom: var(--gap-md, 20px);
+}
+
+.wall-nav button {
+  font-size: 20px;
+  width: 60px;    /* 고정 폭 */
+  height: 60px;   /* 고정 높이 */
+  border-radius: 20px;
+  background: rgba(200, 200 , 200, 0.4);
+  box-shadow: var(--panel-shadow, -2px 0 8px rgba(0, 0, 0, 0.2));
+  color: var(--color-bg-light);
+  border: 2px solid rgba(200, 200 , 200, 0.1);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: background-color .2s ease, opacity .2s ease;
+}
+
+.wall-nav button:hover {
+  background-color: rgba(200, 200 , 200, 0.5);
+  opacity: 1;
+}
+
+.wall-nav button:active {
+  transform: scale(0.95);
+}
+
+.current-wall-label {
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--color-text, #333);
+}
+
+.panel-painting-instructions {
+  list-style: none;          /* 기본 번호 제거 */
+  margin: 1rem 0;
+  padding: 0 1rem;
+  counter-reset: step;       /* 번호 카운터 초기화 */
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;               /* 항목 간격 */
+}
+
+.panel-painting-instructions li {
+  counter-increment: step;   /* 항목마다 +1 */
+}
+
+.panel-painting-instructions li h4::before {
+  content: counter(step) ". ";   /* 번호 표시 */
+  font-weight: bold;
+  margin-right: 0.3rem;          /* 번호와 제목 사이 간격 */
+  color: var(--color-text-strong, #333);
+}
+
+.panel-painting-instructions li h4 {
+  display: inline;            /* 제목과 번호를 같은 줄에 */
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0;                  /* 기본 여백 제거 */
+}
+
+.panel-painting-instructions li p {
+  margin: 0 0 0 1rem;       /* 번호·제목 라인 밑으로 들여쓰기 */
+  font-size: 0.8rem;
+}
+
+/* 작품선택: 썸네일 그리드 */
+.painting-grid-placeholder {
+  width: 105%;                  /* 패널 가로폭의 105% */
+  max-width: none;              /* 원하는 최대 크기 */
+  position: relative;           /* 버튼 배치 기준 */
+  left: 50%;                    /* 부모의 가운데로 이동 */
+  transform: translateX(-50%);
+  aspect-ratio: 1 / 1;          /* 항상 정사각형 */
+  background: rgba(0, 0, 0, 0.1); /* 살짝 보이는 배경 (위치 확인용) */
+  border-radius: var(--radius-md, 20px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 작품선택 썸네일 그리드 래퍼 */
+.painting-grid-wrapper {
+  display: inline-block;        /* 그리드 크기만큼 감싸기 */
+  width: 95%;                   /* placeholder 안에서 살짝 여유 */
+  height: 95%;
+}
+
+/* 작품선택 썸네일 그리드 (3x3) */
+.painting-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gap-sm, 10px);
+  margin-top: 0;                /* placeholder 내부에 맞게 margin 제거 */
+  width: 100%;                  /* 부모 placeholder에 꽉 차도록 */
+  height: 100%;                 /* 부모 placeholder 높이에 맞춤 */
+  aspect-ratio: unset;          /* 비율은 painting-grid-placeholder가 담당 */
+}
+
+.painting-grid img {
+  width: 100%;
+  aspect-ratio: 1 / 1;          /* 정사각형으로 맞추기 */
+  object-fit: cover;            /* 비율 유지하면서 꽉 채우기 */
+  border-radius: var(--radius-sm, 10px);
+  cursor: grab;
+  box-sizing: border-box;       /* border 크기 포함 → 크기 안정 */
+  border: 2px solid var(--color-border-light, #bbb);
+  transition: transform 0.1s ease, border-color 0.2s ease;
+}
+
+.painting-grid img:active {
+  cursor: grabbing;
+  transform: scale(0.95);       /* 드래그 중 살짝 축소 */
+  border-color: var(--color-primary-hover, #ff8b79); /* 색상만 변경 */
+}
+
+/* 전시서문쓰기: 오브젝트(프레임/플레인/포스터) 그리드 */
+.intro-object-grid {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: var(--gap-lg, 25px) 0;
+}
+.intro-object-grid .thumbnail {
+  width: 90px;
+  height: 90px;
+  border-radius: 15px;
+  border: 2px solid var(--color-border-light, #bbb);
+  cursor: grab;
+  transition: border 0.3s, box-shadow 0.3s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background: #fafaff; /* JS에서 bg 덮어씀 */
+  display: flex;
+  align-items: center;     /* 세로 중앙 */
+  justify-content: center; /* 가로 중앙 */
+  text-align: center;      /* 여러 줄일 때도 중앙 */
+}
+.intro-object-grid .thumbnail:active {
+  cursor: grabbing;
+  transform: scale(0.95); /* 드래그 중 살짝 축소 */
+  border: 2px solid var(--color-primary-hover, #ff8b79);
+  box-shadow: 0 4px 18px rgba(255, 139, 121, 0.08);
+}
+/* 라벨 */
+.intro-object-grid .thumbnail .intro-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  line-height: 1.3;
+  pointer-events: none; /* 텍스트 선택/드래그 방지 */
+}
+
+/* 아트월 패널: 고정 정사각형 박스 (버튼 + 그리드 포함) */
+.artwall-grid-placeholder {
+  width: 105%;                  /* 패널 가로폭의 105% */
+  max-width: none;              /* 원하는 최대 크기 */
+  position: relative;           /* 버튼 배치 기준 */
+  left: 50%;                    /* 부모의 가운데로 이동 */
+  transform: translateX(-50%);
+  aspect-ratio: 1 / 1;          /* 항상 정사각형 */
+  background: rgba(0, 0, 0, 0.1); /* 살짝 보이는 배경 (위치 확인용) */
+  border-radius: var(--radius-md, 20px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 아트월 썸네일 그리드 래퍼 */
+.artwall-grid-wrapper {
+  display: inline-block;        /* 그리드 크기만큼 감싸기 */
+  width: 95%;                   /* placeholder 안에서 살짝 여유 */
+  height: 95%;
+}
+
+/* 아트월 썸네일 그리드 (3x3) */
+.artwall-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 가로 3칸 */
+  gap: var(--gap-sm, 10px);
+  margin-top: 0;                /* placeholder 내부에 맞게 margin 제거 */
+  width: 100%;                  /* 부모 placeholder에 꽉 차도록 */
+  height: 100%;                 /* 부모 placeholder 높이에 맞춤 */
+  aspect-ratio: unset;          /* 비율은 artwall-grid-placeholder가 담당 */
+  /* 항상 정사각형 박스 → artwall-grid-placeholder에서 관리 */
+}
+
+.artwall-grid img.thumbnail {
+  width: 100%;                  /* 셀을 꽉 채움 */
+  aspect-ratio: 1 / 1;          /* 정사각형으로 맞추기 */
+  object-fit: cover;            /* 비율 유지하면서 꽉 채우기 */
+  border-radius: var(--radius-sm, 10px);
+  cursor: grab;
+  box-sizing: border-box;       /* border 크기 포함 */
+  border: 2px solid var(--color-border-light, #bbb);
+  transition: transform 0.1s ease, border-color 0.2s ease;
+}
+.artwall-grid img.thumbnail:active {
+  cursor: grabbing;
+  transform: scale(0.95);       /* 드래그 중 살짝 축소 */
+  border-color: var(--color-primary-hover, #ff8b79);
+}
+
+/* 아트월 패널: 좌우 컨트롤 아이콘 (Prev/Next) */
+.artwall-grid-placeholder .grid-nav-icon,
+.grid-placeholder .grid-nav-icon {
+  position: absolute;           /* placeholder 기준 */
+  top: 50%;                     /* 세로 중앙 */
+  transform: translateY(-50%);
+  width: 25px;                  /* 아이콘 크기 */
+  height: auto;
+  cursor: pointer;
+  opacity: 0.4;                 /* 기본 반투명 */
+  transition: opacity 0.2s, filter 0.2s;
+  z-index: 10;
+}
+/* 좌우 위치 */
+.artwall-grid-placeholder .grid-nav-icon.prev,
+.grid-placeholder .grid-nav-icon.prev { left: -35px; }
+.artwall-grid-placeholder .grid-nav-icon.next,
+.grid-placeholder .grid-nav-icon.next { right: -35px; }
+/* hover 효과 */
+.artwall-grid-placeholder .grid-nav-icon:hover,
+.grid-placeholder .grid-nav-icon:hover {
+  opacity: 0.6;
+  filter: brightness(1.2);
+}
+.artwall-grid-placeholder .grid-nav-icon:active,
+.grid-placeholder .grid-nav-icon:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* 패널 하단 고정 정사각형 */
+.grid-placeholder {
+  width: 105%;                  /* 패널 가로폭의 105% */
+  max-width: none;              /* 원하는 최대 크기 */
+  position: relative;           /* 버튼 배치 기준 */
+  left: 50%;                    /* 부모의 가운데로 이동 */
+  transform: translateX(-50%);
+  aspect-ratio: 1 / 1;          /* 항상 정사각형 */
+  background: rgba(0, 0, 0, 0.1); /* 살짝 보이는 배경 (위치 확인용) */
+  border-radius: var(--radius-md, 20px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel-intro-instructions {
+  list-style: none;          /* 기본 번호 제거 */
+  margin: 1rem 0;
+  padding: 0 1rem;
+  counter-reset: step;       /* 번호 카운터 초기화 */
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;               /* 항목 간격 */
+}
+
+.panel-intro-instructions li {
+  counter-increment: step;   /* 항목마다 +1 */
+}
+
+.panel-intro-instructions li h4::before {
+  content: counter(step) ". ";   /* 번호 표시 */
+  font-weight: bold;
+  margin-right: 0.3rem;          /* 번호와 제목 사이 간격 */
+  color: var(--color-text-strong, #333);
+}
+
+.panel-intro-instructions li h4 {
+  display: inline;            /* 제목과 번호를 같은 줄에 */
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0;                  /* 기본 여백 제거 */
+}
+
+.panel-intro-instructions li p {
+  margin: 0 0 0 1rem;       /* 번호·제목 라인 밑으로 들여쓰기 */
+  font-size: 0.8rem;
+}
+
+/* 전시서문쓰기모드: 텍스트를 입력할때 생성되는 텍스트 에디터 오버레이 */
+#introTextEditorOverlay {
+  background: var(--editor-overlay-bg, rgba(255, 255, 255, 0.96)); /* 거의 흰색, 불투명도 조정 가능 */
+  border-radius: var(--radius-md, 20px);
+  box-shadow: var(--editor-shadow, 0 4px 20px rgba(0, 0, 0, 0.14));
+  padding: 18px 24px 12px 24px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  min-height: 80px; /* 입력부의 최소 높이 (더 줄일 수 있음) */
+  max-height: 240px; /* 입력부의 최대 높이 (원하는 값으로) */
+  /* z-index: var(--z-editor, 1200);  필요하면 주석 해제 (다른 오버레이 위로 올릴 때) */
+}
+
+/* Quill 텍스트 에디터: 편집 영역은 남은 높이를 모두 사용 */
+#quillEditor {
+  flex: 1 1 auto;
+  min-height: 40px; /* 입력부의 최소 높이 (더 줄일 수 있음) */
+  max-height: 120px; /* 입력부의 최대 높이 (원하는 값으로) */
+  overflow-y: auto;
+}
+
+/* 에디터 내부 단락마다 6px 간격 주기 */
+#quillEditor .ql-editor p,
+#paintingStoryQuill .ql-editor p {
+  margin: 0 0 var(--editor-paragraph-gap, 6px);
+}
+
+.ql-editor span[style*="color: rgb(255, 255, 255)"],
+.ql-editor span[style*="color: #fff"],
+.ql-editor span[style*="color: #ffffff"] {
+  /* 흰색 텍스트에만 외곽선 효과 */
+  text-shadow:
+    -1px -1px 0 var(--editor-white-outline-color, #222),
+     1px -1px 0 var(--editor-white-outline-color, #222),
+    -1px  1px 0 var(--editor-white-outline-color, #222),
+     1px  1px 0 var(--editor-white-outline-color, #222);
+}
+
+/* 에디터 기본 한글 폰트 적용 */
+.ql-editor {
+  font-family: var(--font-kr-editor, "Noto Sans KR"),
+               "Nanum Gothic","Nanum Myeongjo","Nanum Pen Script",
+               "Apple SD Gothic Neo","맑은 고딕",Arial,sans-serif !important;
+}
+
+/* Quill 폰트 클래스를 각각 폰트에 매핑 */
+.ql-font-noto-sans-kr {
+  font-family:
+    "Noto Sans KR", "Apple SD Gothic Neo", "맑은 고딕", Arial, sans-serif;
+}
+.ql-font-nanum-gothic {
+  font-family:
+    "Nanum Gothic", "Apple SD Gothic Neo", "맑은 고딕", Arial, sans-serif;
+}
+.ql-font-nanum-myeongjo {
+  font-family:
+    "Nanum Myeongjo", "Apple SD Gothic Neo", "맑은 고딕", Arial, sans-serif;
+}
+.ql-font-nanum-pen-script {
+  font-family:
+    "Nanum Pen Script", "Apple SD Gothic Neo", "맑은 고딕", Arial, sans-serif;
+}
+
+/* 툴바에서 폰트 이름 한글로 표시 */
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="noto-sans-kr"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="noto-sans-kr"]::before {
+  content: "Noto Sans KR";
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="nanum-gothic"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="nanum-gothic"]::before {
+  content: "나눔고딕";
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="nanum-myeongjo"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="nanum-myeongjo"]::before {
+  content: "나눔명조";
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="nanum-pen-script"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="nanum-pen-script"]::before {
+  content: "나눔펜";
+}
+
+/* textarea 버튼 막대 – 가운데 정렬 + 아래 붙이기 */
+#overlayBtnBar {
+  position: fixed;
+  bottom: 19px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center; /* 가운데 정렬 */
+  align-items: center;
+  gap: var(--gap-sm, 10px); /* 버튼 간격 */
+}
+
+/* textarea 오버레이 패널 */
+.overlay-panel {
+  position: fixed;
+  left: 50%;
+  bottom: 70px;
+  transform: translateX(-50%);
+  background: var(--overlay-panel-bg, rgba(255, 255, 255, 0.96));
+  border-radius: var(--radius-md, 20px);
+  box-shadow: var(--overlay-panel-shadow, 0 4px 24px rgba(0, 0, 0, 0.13));
+  padding: 28px 32px 18px 32px;
+  z-index: var(--z-overlay-panel, 1200);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 320px;
+  min-height: 120px;
+}
+
+/* 프레임서문 색상 지정 팔레트 스타일 */
+.color-palette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-swatch, 14px);
+  align-items: center;
+}
+
+.color-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: var(--gap-swatch, 14px);
+}
+
+.color-pick-btn {
+  width: var(--swatch-size, 36px);
+  height: var(--swatch-size, 36px);
+  min-width: var(--swatch-size, 36px);
+  min-height: var(--swatch-size, 36px);
+  max-width: var(--swatch-size, 36px);
+  max-height: var(--swatch-size, 36px);
+  border-radius: 50%;
+  border: 2px solid var(--color-border-light, #bbb);
+  cursor: pointer;
+  background: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  outline: none;
+  box-sizing: border-box;
+  padding: 0;
+  display: inline-block;      /* input[type=color]일 때 필요 */
+  vertical-align: middle;     /* 버튼, input 모두 정렬 */
+}
+
+.color-pick-btn.selected,
+.color-pick-btn:focus,
+.color-pick-btn:focus-visible {
+  border: 3px solid var(--color-primary-hover, #ff8b79);
+}
+
+/* 네이티브 컬러 피커 버튼을 동그라미로 */
+input.color-pick-btn[type="color"] {
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 50%;
+  width: var(--swatch-size, 36px);
+  height: var(--swatch-size, 36px);
+  min-width: var(--swatch-size, 36px);
+  min-height: var(--swatch-size, 36px);
+  max-width: var(--swatch-size, 36px);
+  max-height: var(--swatch-size, 36px);
+  padding: 0;
+  border: 2px solid var(--color-border-light, #bbb);
+  box-sizing: border-box;
+  background: none;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+}
+
+/* (선택) WebKit 계열에서 내부 사각 스와치를 둥글게 보정하고 싶다면
+input.color-pick-btn[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input.color-pick-btn[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+*/
+
+/* ───────── 소셜 패널 ───────── */
+.social-panel {
+  position: fixed;
+  right: 30px;
+  bottom: 0;
+  width: var(--social-panel-width, min(90vw, 400px));
+  height: var(--social-panel-height, 50vh);
+  display: flex;
+  flex-direction: column;
+  background: var(--social-bg, #fff);
+  border-radius: var(--radius-sm, 10px);
+  box-shadow: var(--social-shadow, 0 2px 12px rgba(0, 0, 0, 0.16));
+  overflow: hidden;
+  z-index: var(--z-social, 999);
+  transform: translateY(100%); /* 평소엔 아래로 슬라이드 숨김 */
+  pointer-events: none;
+  transition: transform 0.4s ease-in-out; /* settingsPanel과 통일! */
+}
+
+/* 패널이 열릴 때(open 클래스) */
+.social-panel.open {
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ───────── 우측 하단 토글 버튼 (OFF + hover 아이콘) ───────── */
+.social-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px; /* settingsToggle 이 좌측이면 대칭 위치 */
+  border: none;
+  background: transparent center/contain no-repeat;
+  background-image: url("../assets/img/icons/heart.svg"); /* 기본 아이콘 */
+  cursor: pointer;
+  transition: transform 0.4s ease-in-out;
+  opacity: 0.7;
+  display: none; /* 수업 사용 시 비활성화 */
+}
+
+/* hover 시 */
+.social-toggle:hover {
+  background-image: url("../assets/img/icons/heartHover.svg");
+  background-color: transparent !important;
+  opacity: 0.7;
+}
+
+/* 클릭 시 살짝 눌리는 효과 */
+.social-toggle:active {
+  transform: scale(0.95);
+  background-color: transparent !important; /* 배경색 제거 */
+}
+
+.social-toggle.open {
+  /* 소셜창 높이+ 만큼 이동 */
+  transform: translateY(calc(-1 * var(--social-panel-height, 50vh)));
+  transition: transform 0.4s ease;
+}
+
+.social-panel .comment-section {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.social-panel .comments-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0; /* 이거 꼭 있어야 flex로 스크롤 작동! */
+  padding: 12px 18px 8px 18px;
+  margin: 0;
+  box-sizing: border-box;
+  background: var(--social-list-bg, #fafafa);
+}
+
+.social-panel .comment-input-area {
+  flex-shrink: 0; /* 하단 고정! */
+  display: flex;
+  min-height: 28px; /* 1줄이면 28~32px 추천 */
+  max-height: 60px; /* 2~3줄 이상은 스크롤 */
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 18px 14px 18px;
+  background: var(--social-input-bg, #fff);
+  border-top: 1px solid var(--border-subtle, #eee);
+  box-sizing: border-box;
+}
+
+.social-panel #comment-input {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--border-mid, #dbdbdb);
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 14px;
+  min-height: 28px;
+  max-height: 132px; /* 6줄 제한: 22px*6 */
+  background: var(--social-list-bg, #fafafa);
+  outline: none;
+  overflow-y: auto; /* 6줄 넘으면 스크롤 */
+  line-height: 1.5;
+}
+
+.social-panel .comment-item {
+  margin-bottom: 8px;
+  padding-left: 0;
+  border-left: 2px solid transparent;
+  position: relative;
+}
+
+.social-panel .comment-content {
+  padding: 7px 0 4px 0;
+  font-size: 15px;
+  color: #262626;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.social-panel .meta-info {
+  color: #8e8e8e;
+  font-size: 12px;
+  margin-left: 2px;
+  margin-right: 6px;
+}
+
+.social-panel .heart-btn {
+  background: none;
+  border: none;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 2px;
+  margin-right: 4px;
+  transition: color 0.15s, filter 0.15s;
+  color: #ed4956;
+  filter: grayscale(0.5);
+}
+
+.social-panel .heart-btn.liked {
+  filter: grayscale(0);
+  color: #ed4956;
+  font-weight: bold;
+  text-shadow: 0 0 2px #ed4956, 0 0 2px #ed4956;
+}
+
+.social-panel .heart-btn:not(.liked) {
+  color: #dbdbdb;
+  text-shadow: none;
+}
+
+.social-panel .heart-count {
+  font-size: 13px;
+  margin-right: 3px;
+  min-width: 12px;
+  text-align: center;
+  color: #ed4956;
+  vertical-align: middle;
+}
+
+.social-panel .reply-btn {
+  background: none;
+  border: none;
+  color: #8e8e8e;
+  cursor: pointer;
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+.social-panel .reply-input-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  margin-bottom: 3px;
+}
+
+.social-panel .reply-input {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--border-mid, #dbdbdb);
+  border-radius: 5px;
+  padding: 6px;
+  font-size: 13px;
+  min-height: 28px;
+  max-height: 50px;
+  background: var(--social-list-bg, #fafafa);
+  outline: none;
+}
+
+.social-panel .reply-submit-btn {
+  padding: 5px 10px;
+  background: var(--action-blue, #0095f6);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.social-panel .reply-submit-btn:enabled {
+  opacity: 1;
+}
+
+.social-panel .children {
+  margin-left: 24px;
+  border-left: 2px solid #f0f0f0;
+  padding-left: 8px;
+}
+
+.social-panel #submit-btn {
+  padding: 8px 14px;
+  align-items: center;
+  background: var(--action-blue, #0095f6);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.social-panel #submit-btn:enabled {
+  opacity: 1;
+}
+
+/* 상단 어워드 섹션 */
+.award-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px 0 18px;
+  gap: 8px;
+  background: var(--award-section-bg, #f8fafc);
+  border-bottom: 1px solid var(--border-subtle, #eee);
+}
+
+.award-btn {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid var(--border-mid, #dbdbdb);
+  border-radius: 18px;
+  font-size: 18px;
+  padding: 7px 0 5px 0;
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+  min-width: 60px;
+  min-height: 46px;
+  user-select: none;
+  box-shadow: 0 1px 6px rgba(100, 150, 255, 0.03);
+}
+.award-btn:hover,
+.award-btn.selected {
+  background: var(--award-hover-bg, #e3f2fd);
+  border-color: var(--award-hover-border, #87cefa);
+  box-shadow: 0 2px 10px rgba(100, 150, 255, 0.09);
+}
+
+.award-btn span {
+  font-size: 12px;
+  color: #444;
+  margin-top: 2px;
+}
+
+.award-count {
+  position: absolute;
+  bottom: 35px;
+  left: 55px;
+  min-width: 20px;
+  height: 20px;
+  line-height: 19px;
+  background: var(--color-primary-hover, #ff8b79);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 14px;
+  display: inline-block;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  z-index: 2;
+  padding: 0 5px;
+}
+
+/* ========= panel-main 전용 레이아웃 변수 ========= */
+:root{
+  --panel-gutter-left: 60px; /* 왼쪽 기준선(제목/설명/메뉴 모두 동일 시작선) */
+  --menu-icon-col: 70px;     /* 아이콘 고정 폭(아이콘 크기 제각각이어도 정렬 OK) */
+  --menu-row-gap: 20px;
+  --menu-col-gap: 20px;
+}
+
+/* panel-main 슬라이드 안쪽 여백(좌측만 더 들여쓰기) */
+#panel-main{
+  padding: 70px 20px 16px var(--panel-gutter-left);
+}
+
+/* 제목/설명 간격: 거의 바짝 */
+#panel-main > h2{
+  margin: 0 0 10px 0;
+  line-height: 1.2;
+}
+#panel-main > h4{
+  margin: 0 0 40px 0;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* 메뉴 리스트: 행 간격만 관리 */
+#panel-main .settings-menu{
+  display: grid;
+  row-gap: var(--menu-row-gap);
+}
+
+/* 각 항목: [아이콘 고정열] [제목 유동열] 의 2열 그리드 */
+#panel-main .settings-menu > button{
+  all: unset;                  /* 기본 버튼 스타일 제거 */
+  display: grid;
+  grid-template-columns: var(--menu-icon-col) 1fr;
+  column-gap: var(--menu-col-gap);
+  align-items: center;         /* 수직 중앙정렬 */
+  width: 100%;
+  padding: 8px 10px;           /* 클릭 영역 확보 */
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 20px; /* 항목 폰트 크기 */
+}
+
+/* 아이콘: 고정 박스 중앙 정렬 (크기가 제각각이어도 열 맞춤 유지) */
+#panel-main .settings-menu .menu-icon{
+  width: var(--menu-icon-col);
+  height: var(--menu-icon-col);
+  object-fit: contain;
+  justify-self: center;        /* 아이콘 열 중앙 */
+  display: block;
+  pointer-events: none;
+}
+
+/* === 공통 헤더 위치 (panel-main 과 동일) === */
+:root{
+  --panel-pad-right: 60px;
+  --panel-pad-bottom: 16px;
+  --panel-header-top: 70px;    /* 상단 여백 */
+  --panel-subtitle-gap: 40px;  /* h4 ↔ 본문 간격 */
+}
+
+/* 모든 settings-slide에서 공통 적용 */
+.settings-slide{
+  padding: var(--panel-header-top) var(--panel-pad-right) var(--panel-pad-bottom) var(--panel-gutter-left);
+  box-sizing: border-box;
+}
+
+.settings-slide > h4{
+  margin: 0 0 var(--panel-subtitle-gap) 0;
+  font-weight: 400;
+  line-height: 1.4;
+}
