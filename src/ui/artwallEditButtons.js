@@ -20,7 +20,7 @@ export function showArtwallButtons(mesh, scene, editingButtonsDiv, getArtwalls, 
   // 삭제 버튼 생성
   const del = document.createElement("button");
   del.classList.add("icon-btn", "md");
-  del.innerHTML = `<img src="public/icons/editDelete.svg" alt="삭제" />`;
+  del.innerHTML = `<img src="/icons/editDelete.svg" alt="삭제" />`;
 
 
   // 삭제 버튼 클릭 핸들러

@@ -107,7 +107,7 @@ overlay.appendChild(meta)
   // 확인 버튼
   const okBtn = document.createElement('button')
   okBtn.classList.add('icon-btn', 'sm')
-  okBtn.innerHTML = `<img src="public/icons/apply.svg" alt="확인" />`
+  okBtn.innerHTML = `<img src="/icons/apply.svg" alt="확인" />`
   okBtn.onclick = function () {
     // 텍스트 저장(HTML)
     const html = storyQuill.root.innerHTML
@@ -137,7 +137,7 @@ overlay.appendChild(meta)
   // 취소 버튼
   const cancelBtn = document.createElement('button')
   cancelBtn.classList.add('icon-btn', 'sm')
-  cancelBtn.innerHTML = `<img src="public/icons/back.svg" alt="취소" />`
+  cancelBtn.innerHTML = `<img src="/icons/back.svg" alt="취소" />`
   cancelBtn.onclick = function () {
     if (overlay && overlay.parentNode) {
       overlay.parentNode.removeChild(overlay)

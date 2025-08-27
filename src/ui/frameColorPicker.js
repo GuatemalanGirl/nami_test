@@ -50,7 +50,7 @@ export function showFrameColorPicker(mesh, editingButtonsDiv, scene, camera, con
 // 확인/취소 버튼
   const okBtn = document.createElement("button")
   okBtn.classList.add("icon-btn", "sm")
-  okBtn.innerHTML = `<img src="public/icons/apply.svg" alt="확인" />`
+  okBtn.innerHTML = `<img src="/icons/apply.svg" alt="확인" />`
   okBtn.addEventListener("click", () => {
     // 색상 확정: userData, DB 등에 저장
     mesh.userData.frameColor = mesh.userData.frameColorTemp || "#" + prevColor
@@ -64,7 +64,7 @@ export function showFrameColorPicker(mesh, editingButtonsDiv, scene, camera, con
 
   const cancelBtn = document.createElement("button")
   cancelBtn.classList.add("icon-btn", "sm")
-  cancelBtn.innerHTML = `<img src="public/icons/back.svg" alt="취소" />`
+  cancelBtn.innerHTML = `<img src="/icons/back.svg" alt="취소" />`
   cancelBtn.addEventListener("click", () => {
     // 취소: 기존 색상 복원
     mesh.material[4].color.set("#" + prevColor)

@@ -82,10 +82,10 @@ export function showPaintingResizeButtons(mesh, scene, camera, controls, quill) 
   html += `
     <div class="action-row" style="display:flex;gap:8px;justify-content:center;">
       <button id="resizeOkBtn" class="icon-btn md">
-        <img src="public/icons/apply.svg" alt="확인" />
+        <img src="/icons/apply.svg" alt="확인" />
       </button>
       <button id="resizeCancelBtn" class="icon-btn md">
-        <img src="public/icons/back.svg" alt="취소" />
+        <img src="/icons/back.svg" alt="취소" />
       </button>
     </div>
   `;
