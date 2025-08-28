@@ -132,7 +132,6 @@ export function handlePaintingDrop(rawData, scene, renderer, camera, raycaster, 
   loadAndAddPainting({
     scene,
     textureLoader,
-    getPaintings,
     data: paintingData,
     position: point,
     rotationY: wallRotY
@@ -200,7 +199,7 @@ export function handleIntroDrop(type, scene, renderer, camera, raycaster, painti
 
     if (already) {
       console.warn('[poster] only one poster is allowed.')
-      alert('포스터는 한 개만 붙힐 수 있어요.')
+      alert('포스터는 한 개만 붙일 수 있어요.')
       return
     }
 
@@ -261,7 +260,6 @@ export function registerDropEvents(domElement, {
         raycaster,
         getTempPaintings(),
         textureLoader,
-        getPaintings,
         e // 드롭 이벤트 객체도 전달
       )
       return // 그림 작업 끝, 아래 intro용 드롭 실행 안함
