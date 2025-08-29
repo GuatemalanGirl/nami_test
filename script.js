@@ -67,7 +67,7 @@ import {
   setupApplyButton,
   setupTexturePagination
 } from './src/ui/textureGrid.js'
-import { addWallNavListeners } from './src/ui/wallNavigation.js'
+import { addWallNavListeners, alignToCameraWall } from './src/ui/wallNavigation.js'
 import {
   startEditingArtwall,
   endEditingArtwall,
