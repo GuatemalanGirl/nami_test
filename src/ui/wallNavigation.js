@@ -44,3 +44,19 @@ export function addWallNavListeners(camera, controls) {
     })
   )
 }
+
+/**
+ * 코드에서 직접 호출하는 벽면 전환 래퍼
+ *  - 엣지-드래그 유틸이 이 함수를 호출하게 됨
+ */
+export function goToLeftWall(camera, controls) {
+  rotateWall("left")
+  updateWallView(camera, controls)
+  updateAllWallLabels()
+}
+
+export function goToRightWall(camera, controls) {
+  rotateWall("right")
+  updateWallView(camera, controls)
+  updateAllWallLabels()
+}

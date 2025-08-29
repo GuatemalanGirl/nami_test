@@ -9,6 +9,9 @@ import * as THREE from 'three'
 // -------------------------------------------------------------
 
 import { updatePaintingOrderByPosition } from '../core/order.js'
+import { createEdgeWallNavigator } from './edgeWallNavigator.js'
+import { goToLeftWall, goToRightWall } from '../ui/wallNavigation.js'
+import { getCameraMovingState } from '../domain/zoomState.js'
 
 export function registerPaintingDragHandlers(domElement, {
   getIsResizingWithHandle,
@@ -29,7 +32,10 @@ export function registerPaintingDragHandlers(domElement, {
   raycaster,
   scene,
   controls,
-  quill
+  quill,
+
+  // intro(서문) 모드 게이트 (없으면 false)
+  getIntroMode = () => false
 }) {
   // 그림 드래그/선택 상태 변수 (이 파일 로컬)
   let pointerDownTime = 0; // pointerdown 시각
@@ -39,17 +45,61 @@ export function registerPaintingDragHandlers(domElement, {
   const dragThreshold = 7; // 픽셀 (7px 이상 움직이면 드래그로 간주)
   const clickTimeThreshold = 200; // ms (200ms 이하면 클릭으로 간주)
 
+  // 네비 직후 pointerup 클릭/드롭 판정 억제 플래그
+  let suppressNextPointerUp = false;
+
+  // 실제 드래그 타깃(작품/서문)이 선택되어 있는지
+  let hasDragTarget = false;
+
+  // 헬퍼: 활성 모드(작품 or 서문) 여부
+  const anyModeActive = () => !!(getPaintingMode?.() || getIntroMode?.());
+
+  // 헬퍼: 리사이즈 중 여부 (공통 게이트)
+  const anyResizing = () => !!(getIsResizingWithHandle?.() || getIsResizingPainting?.());
+
+  // 회전 계산에 재사용할 임시 객체들(할당 최소화)
+  const forward = new THREE.Vector3(0, 0, 1); // mesh의 “정면”이 +Z라고 가정
+  const tmpQuat  = new THREE.Quaternion();
+  const tmpNorm  = new THREE.Vector3();
+
+  // 엣지-드래그 네비게이터 생성 (painting+intro 공통 사용)
+  const edgeNav = createEdgeWallNavigator({
+    domElement,
+    // ★ 타깃이 있을 때만 엣지 네비 활성
+    isActive:   () => anyModeActive() && hasDragTarget,
+    isDragging: () => isDragging,
+    isResizing: () => anyResizing(),
+    isMoving:   () => !!getCameraMovingState?.(), // 카메라 이동 중엔 비활성화
+    onBeforeNavigate: (dir) => {
+      // 네비 직전 드래그 안전 처리 (선택/드래그는 유지)
+      try { endEditingPainting?.(scene); } catch(_) {}
+      // 드래그 연속성 유지를 위해 상태를 리셋하지 않음
+      suppressNextPointerUp = true;
+    },
+    goLeft:  () => goToLeftWall(camera, controls),
+    goRight: () => goToRightWall(camera, controls),
+    edgePct: 0.08,   // 좌/우 8%
+    dwellMs: 100,    // 머문 시간
+    cooldownMs: 500  // 재트리거 대기
+  });
+
   // -----------------------------
   // 마우스 드래그로 그림 위치 이동
   // -----------------------------
   domElement.addEventListener("pointerdown", (e) => {
-    if (getIsResizingWithHandle() || getIsResizingPainting()) return; // 크기조절 중이면 무시
+    if (anyResizing()) return; // 크기조절 중이면 무시
 
-    if (!getPaintingMode()) return;
+    // 작품/서문 모드 중 하나라도 아니면 무시
+    if (!anyModeActive()) return;
+
     pointerDownTime = Date.now();
     dragStartScreen = { x: e.clientX, y: e.clientY };
     isDragging = false;
-    setSelectedPainting(null);
+    suppressNextPointerUp = false;
+
+    // (작품/서문 공통) 선택 초기화
+    setSelectedPainting?.(null);
+    hasDragTarget = false;
 
     const currentWall = getCurrentWall();
 
@@ -73,14 +123,36 @@ export function registerPaintingDragHandlers(domElement, {
       ) {
         mesh = mesh.parent;
       }
-      setSelectedPainting(mesh);
+      setSelectedPainting?.(mesh);
+      hasDragTarget = true;        // 실제 타깃 확보
+    } else {
+      hasDragTarget = false;       // 빈 곳 클릭
     }
+
+    // 엣지 네비 초기화 (타깃 판정 이후 호출)
+    edgeNav.onDragStart();
+
+    // 패널 위로 포인터가 가도 이벤트 유지
+    try { domElement.setPointerCapture?.(e.pointerId); } catch (_) {}
   });
 
   domElement.addEventListener("pointerup", (e) => {
-    if (getIsResizingWithHandle() || getIsResizingPainting()) return; // 크기조절 중이면 무시
+    if (anyResizing()) return; // 크기조절 중이면 무시
+    if (!anyModeActive() || !dragStartScreen) return;
 
-    if (!getPaintingMode() || !dragStartScreen) return;
+    // 네비 직후 pointerup 억제 — 클릭/드롭 판정 없이 리셋만
+    if (suppressNextPointerUp) {
+      suppressNextPointerUp = false;
+      dragStartScreen = null;
+      pointerDownTime = 0;
+      isDragging = false;
+      setSelectedPainting?.(null);
+      hasDragTarget = false; 
+      edgeNav.onDragEnd();
+      try { domElement.releasePointerCapture?.(e.pointerId); } catch (_) {}
+      return;
+    }
+
     const dt = Date.now() - pointerDownTime;
     const dx = e.clientX - dragStartScreen.x;
     const dy = e.clientY - dragStartScreen.y;
@@ -89,55 +161,70 @@ export function registerPaintingDragHandlers(domElement, {
     // --- 1. 드래그 상태 확인 ---
     if (isDragging) {
       wasDragging = true;
-      // 드래그로 끝났을 때: 배열 정렬 동기화
-      updatePaintingOrderByPosition();
+      // 드래그로 끝났을 때: 배열 정렬 동기화 (그림 모드에서만)
+      if (getPaintingMode?.()) {
+        updatePaintingOrderByPosition();
+      }
       // 드래그로 끝났을 때는 아무 동작도 하지 않는다 (버튼X)
     } else {
       wasDragging = false;
-      // 클릭 판정(=드래그 아님 + 시간/거리 조건)
-      const sel = getSelectedPainting();
-      if (dt < clickTimeThreshold && dist < dragThreshold && sel) {
-        if (getEditingPainting() && getEditingPainting() !== sel) {
-          endEditingPainting(scene);
+
+      // 클릭 판정은 "작품 모드에서만" 수행 (서문 모드에선 별도 편집 오픈 X)
+      if (getPaintingMode?.()) {
+        const sel = getSelectedPainting?.();
+        if (dt < clickTimeThreshold && dist < dragThreshold && sel) {
+          if (getEditingPainting?.() && getEditingPainting() !== sel) {
+            endEditingPainting?.(scene);
+          }
+          if (getEditingPainting?.() !== sel) {
+            startEditingPainting?.(sel, scene, camera, controls, quill);
+          }
         }
-        if (getEditingPainting() !== sel) {
-          startEditingPainting(sel, scene, camera, controls, quill);
+        // 그림 없는 곳 클릭시
+        if (!sel || (dt < clickTimeThreshold && dist < dragThreshold && !sel)) {
+          endEditingPainting?.(scene);
         }
-      }
-      // 그림 없는 곳 클릭시
-      if (
-        !sel ||
-        (dt < clickTimeThreshold && dist < dragThreshold && !sel)
-      ) {
-        endEditingPainting(scene);
+      } else {
+        // intro 모드 클릭은 여기서 특별 처리 없음(필요 시 별도 모듈에서)
       }
     }
     // 리셋
     dragStartScreen = null;
     pointerDownTime = 0;
     isDragging = false;
-    setSelectedPainting(null);
+    setSelectedPainting?.(null);
+    hasDragTarget = false;
+    edgeNav.onDragEnd();
+
+    try { domElement.releasePointerCapture?.(e.pointerId); } catch (_) {}
   });
 
   domElement.addEventListener("pointermove", (e) => {
-    if (getIsResizingWithHandle() || getIsResizingPainting()) return; // 크기조절 중이면 무시
+    if (anyResizing()) return; // 크기조절 중이면 무시
 
-    if (!getPaintingMode() || !(e.buttons & 1) || !dragStartScreen) return;
+    if (!anyModeActive() || !(e.buttons & 1) || !dragStartScreen) return;
 
     const dx = e.clientX - dragStartScreen.x;
     const dy = e.clientY - dragStartScreen.y;
     if (!isDragging && Math.sqrt(dx * dx + dy * dy) > dragThreshold) {
+      
+      if (!hasDragTarget) return; // 실제 선택된 타깃이 없으면 드래그 시작하지 않음(엣지 네비도 비활성)
       isDragging = true; // 일정 이상 움직이면 드래그 시작
 
-      if (getEditingPainting()) {
+      if (getPaintingMode?.()) {
         // 드래그 시작 -> 기존 편집(테두리) 제거
-        endEditingPainting(scene); // 테두리+편집버튼 모두 사라짐
+        if (getEditingPainting?.()) {
+          endEditingPainting?.(scene); // 테두리+편집버튼 모두 사라짐
+        }
+      } else if (getIntroMode?.()) {
+        // 서문 모드 드래그 시작 시에도 그림 편집 UI는 닫아두는 편이 안전
+        try { endEditingPainting?.(scene); } catch(_) {}
       }
     }
 
-    // 드래그 중이면 selectedPainting 이동
+    // 드래그 중이면 selectedPainting(또는 intro 오브젝트) 이동
     if (isDragging) {
-      const sel = getSelectedPainting();
+      const sel = getSelectedPainting?.();
       if (sel) {
         const rect = domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(
@@ -199,9 +286,29 @@ export function registerPaintingDragHandlers(domElement, {
             }
 
             sel.position.copy(point);
+
+            // 회전(노멀 정렬): forward(+Z) -> 벽 노멀(normal) 방향으로 회전
+            tmpNorm.copy(normal).normalize();
+            tmpQuat.setFromUnitVectors(forward, tmpNorm);
+            // 부드럽게 보간(원하면 0.2~0.5 사이로 조절)
+            sel.quaternion.slerp(tmpQuat, 0.35);
+            // 즉시 정렬 원하면: sel.quaternion.copy(tmpQuat);
           }
         }
       }
     }
+  });
+
+  // pointercancel: 캡처 해제 + 상태 리셋(안전)
+  domElement.addEventListener("pointercancel", (e) => {
+    if (!anyModeActive() || !dragStartScreen) return;
+    suppressNextPointerUp = false;
+    dragStartScreen = null;
+    pointerDownTime = 0;
+    isDragging = false;
+    setSelectedPainting?.(null);
+    hasDragTarget = false; 
+    edgeNav.onDragEnd();
+    try { domElement.releasePointerCapture?.(e.pointerId); } catch (_) {}
   });
 }

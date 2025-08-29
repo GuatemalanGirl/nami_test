@@ -36,19 +36,26 @@ export function updateWallView(camera, controls) {
       break
   }
 
-  // 최신 Tween Group 방식 적용!
+  const hasControls = !!(controls && controls.target)
+
+  // 최신 Tween Group 방식 적용
   new Tween(camera.position, tweenGroup)
     .to(pos, 600)
-    .easing(Easing.Cubic.InOut)                   // TWEEN.Easing -> Easing
-    .onUpdate(() => camera.lookAt(controls.target))
-    .start()
-
-  new Tween(controls.target, tweenGroup)
-    .to(look, 600)
     .easing(Easing.Cubic.InOut)
     .onUpdate(() => {
-      controls.update()
-      camera.lookAt(controls.target)
+      if (hasControls) camera.lookAt(controls.target)
+      else             camera.lookAt(look)
     })
     .start()
+
+  if (hasControls) {  
+    new Tween(controls.target, tweenGroup)
+      .to(look, 600)
+      .easing(Easing.Cubic.InOut)
+      .onUpdate(() => {
+        controls.update()
+        camera.lookAt(controls.target)
+      })
+      .start()
+  }    
 }
