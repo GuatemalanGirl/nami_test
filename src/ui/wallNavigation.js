@@ -1,7 +1,8 @@
 // ui/wallNavigation.js
 
-import { getCurrentWall, rotateWall } from "../domain/wall.js"
+import { getCurrentWall, rotateWall, setCurrentWall } from "../domain/wall.js"
 import { updateWallView } from "../core/view.js"
+import { getFacingWallName } from "../core/facingWall.js"
 
 /**
  * 모든 `.current-wall-label` 요소의 텍스트를 현재 벽 이름으로 갱신
@@ -22,6 +23,16 @@ export function updateAllWallLabels() {
   document
     .querySelectorAll(".current-wall-label")
     .forEach((label) => (label.textContent = labelText))
+}
+
+/**
+ * 현재 카메라 시점이 바라보는 벽으로 currentWall을 맞추고 시점을 고정.
+ */
+export function alignToCameraWall(camera, controls, scene) {
+  const facing = getFacingWallName(camera, scene)
+  setCurrentWall(facing)
+  updateWallView(camera, controls)
+  updateAllWallLabels()
 }
 
 /**
