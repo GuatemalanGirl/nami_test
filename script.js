@@ -431,9 +431,18 @@ async function initApp() {
 
   document.getElementById('themeBtn').onclick = () => showPanel('panel-theme', camera, controls);
   document.getElementById('bgBtn').onclick = () => showPanel('panel-background', camera, controls);
-  document.getElementById('paintingsBtn').onclick = () => showPanel('panel-paintings', camera, controls);
-  document.getElementById('introBtn').onclick = () => showPanel('panel-intro', camera, controls);
-  document.getElementById('artwallsBtn').onclick = () => showPanel('panel-artwalls', camera, controls, scene);
+  document.getElementById('paintingsBtn').onclick = () => { 
+    showPanel('panel-paintings', camera, controls, scene)
+    requestAnimationFrame(() => alignToCameraWall(camera, controls, scene))
+  };
+  document.getElementById('introBtn').onclick = () => {
+    showPanel('panel-intro', camera, controls, scene)
+    requestAnimationFrame(() => alignToCameraWall(camera, controls, scene))
+  };
+  document.getElementById('artwallsBtn').onclick = () => {
+    showPanel('panel-artwalls', camera, controls, scene)
+    requestAnimationFrame(() => alignToCameraWall(camera, controls, scene))
+  };
   document.getElementById('invitationBtn').onclick = () => showPanel('panel-invitation', camera, controls);
 
   // <- 뒤로가기 버튼(복수 가능): 모든 .backToMainBtn에 이벤트 부여
