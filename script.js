@@ -480,25 +480,24 @@ toggle.addEventListener('change', (e) => {
   label.textContent = e.target.checked ? "비공개" : "공개";
 });
 
-// ─────── 패널 내 shortcut 버튼 클릭 시 해당 패널로 전환 ─────────
-// shortcut 버튼 클릭 이벤트
-document.querySelectorAll('.shortcut-btn[data-role="panel-shortcut"]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const targetId = btn.getAttribute('data-panel');
-    const targetPanel = document.getElementById(targetId);
-    if (!targetPanel) return;
+// ─────── 패널 내 shortcut 버튼 클릭 → 항상 showPanel 경유 ─────────
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.shortcut-btn[data-role="panel-shortcut"]');
+  if (!btn) return;
 
-    // 모든 패널 비활성화
-    document.querySelectorAll('.settings-slide').forEach(panel => {
-      panel.classList.remove('active');
-    });
+  e.preventDefault();
+  const targetId = btn.getAttribute('data-panel');
 
-    // 선택한 패널만 활성화
-    targetPanel.classList.add('active');
+  // 핵심: 패널 전환은 반드시 showPanel로
+  showPanel(targetId, camera, controls, scene);
 
-    // shortcut 버튼 active 스타일 관리
-    document.querySelectorAll('.shortcut-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+  // 새로 활성화된 패널의 상단 바로가기 바에서 active 스타일 갱신
+  requestAnimationFrame(() => {
+    const activeSlide = document.querySelector('.settings-slide.active');
+    if (!activeSlide) return;
+    activeSlide.querySelectorAll('.shortcut-btn').forEach(b => b.classList.remove('active'));
+    const highlight = activeSlide.querySelector(`.shortcut-btn[data-panel="${targetId}"]`);
+    highlight?.classList.add('active');
   });
 });
 
