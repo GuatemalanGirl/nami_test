@@ -15,6 +15,9 @@ import { setSelectedPainting, getPaintings } from '../domain/painting.js' // pai
 // === 외부 메타데이터 접근: 정적 import로 Vite 빌드 에러 방지
 import { getPaintingsData, fetchPaintingsData } from '../data/painting.js'
 
+// 캔버스 기준 정규화 좌표 계산 유틸(존재 시 사용, 없으면 기존 방식 폴백)
+import { updatePointer } from '../core/pointer.js'
+
 let prevCameraPos = null
 let prevControlsTarget = null
 let __lastCaptionClickAt = 0; // 최근 캡션 클릭 시각(ms)
@@ -36,7 +39,7 @@ function matchPaintingRecord(key, rec) {
 // === mesh에서 식별자 뽑기(우선순위: id -> filename -> name -> title -> uuid)
 function extractKeyFromMesh(mesh) {
   const ud = mesh?.userData || {}
-  return ud.id || ud.filename || mesh?.name || ud.title || mesh?.uuid || null
+  return ud.id || ud.filename || mesh?.name || ud.title || ud.uuid || null
 }
 
 // === 모달 상태 헬퍼
@@ -132,12 +135,21 @@ export function zoomTo(painting, distance, camera, controls) {
     .start()
 }
 
-export function onClick(event, camera, controls, raycaster, pointer, paintings, scene) {
+// renderer를 옵션으로 추가해, 있으면 updatePointer로 캔버스 기준 좌표를 사용
+export function onClick(event, camera, controls, raycaster, pointer, paintings, scene, renderer /* optional */) {
   if (getPaintingMode()) return // 설정창 작품선택 시 클릭 차단
   if (getCameraMovingState()) return
 
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1
-  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
+  // 터치 기본 제스처 개입 방지(스크롤/더블탭 확대 등)
+  if (event?.cancelable && event.pointerType && event.pointerType !== 'mouse') event.preventDefault()
+
+  // 좌표 계산: renderer가 있으면 캔버스 기준 정규화(-1~1), 없으면 기존 방식 폴백
+  if (renderer?.domElement) {
+    updatePointer(event, pointer, renderer)
+  } else {
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
+  }
   raycaster.setFromCamera(pointer, camera)
 
   const allPaintings = getPaintings()
@@ -219,7 +231,7 @@ export function onClick(event, camera, controls, raycaster, pointer, paintings, 
   }
 }
 
-export function onDoubleClick(event, camera, controls, raycaster, pointer, scene) {
+export function onDoubleClick(event, camera, controls, raycaster, pointer, scene, renderer /* optional */) {
   if (getPaintingMode()) return // 설정창 작품선택 시 클릭 차단
   const zoomed = getZoomedPainting()
   if (!zoomed || getCameraMovingState()) return
@@ -231,8 +243,17 @@ export function onDoubleClick(event, camera, controls, raycaster, pointer, scene
 
   // === 레이캐스트로도 한 번 더 안전장치 (호출부에서 raycaster/pointer 전달 시)
   if (raycaster && pointer) {
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1
-    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
+    // 터치 기본 제스처 억제
+    if (event?.cancelable && event.pointerType && event.pointerType !== 'mouse') event.preventDefault()
+
+    if (renderer?.domElement) {
+      // 캔버스 기준 좌표
+      updatePointer(event, pointer, renderer)
+    } else {
+      pointer.x = (event.clientX / window.innerWidth) * 2 - 1
+      pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
+    }
+
     raycaster.setFromCamera(pointer, camera)
 
     const hits = raycaster.intersectObjects(getPaintings(), true)
@@ -324,6 +345,7 @@ export function zoomBackOut(camera, controls) {
     })
     .onComplete(() => {
       setCameraMovingState(false)
+      controls.enabled = true // 완료 후 컨트롤 복구
       // 초기화
       prevCameraPos = null
       prevControlsTarget = null
