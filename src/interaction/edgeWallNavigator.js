@@ -42,7 +42,9 @@ export function createEdgeWallNavigator({
   // 파라미터
   edgePct = 0.08,   // 좌/우 8% 영역에서만 감지
   dwellMs = 350,    // 가장자리 체류 시간(ms)
-  cooldownMs = 600  // 재트리거 쿨다운(ms)
+  cooldownMs = 600,  // 재트리거 쿨다운(ms)
+  deadzoneTopPct = 0.1, // 상단 10% 영역 무시
+  deadzoneBottomPct = 0.1 // 하단 10% 영역 무시
 }) {
   let destroyed = false;
   let pendingDir = null;   // 'left' | 'right' | null
@@ -101,6 +103,12 @@ export function createEdgeWallNavigator({
 
     const rect = domElement.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+
+    if (y <= deadzoneTopPct || y >= 1 - deadzoneBottomPct) {
+      clearTimer();
+      return;
+    }
 
     if (x <= edgePct) schedule('left');
     else if (x >= 1 - edgePct) schedule('right');
@@ -110,9 +118,10 @@ export function createEdgeWallNavigator({
   function onPointerLeave() { clearTimer(); }
   function onPointerCancel() { clearTimer(); }
 
-  domElement.addEventListener('pointermove', onPointerMove);
-  domElement.addEventListener('pointerleave', onPointerLeave);
-  domElement.addEventListener('pointercancel', onPointerCancel);
+    // 이 모듈은 preventDefault를 쓰지 않으므로 passive:true로 성능 안전
+    domElement.addEventListener('pointermove', onPointerMove, { passive: true });
+    domElement.addEventListener('pointerleave', onPointerLeave, { passive: true });
+    domElement.addEventListener('pointercancel', onPointerCancel, { passive: true });
 
   return {
     onDragStart() { clearTimer(); },
@@ -120,9 +129,9 @@ export function createEdgeWallNavigator({
     destroy() {
       destroyed = true;
       clearTimer();
-      domElement.removeEventListener('pointermove', onPointerMove);
-      domElement.removeEventListener('pointerleave', onPointerLeave);
-      domElement.removeEventListener('pointercancel', onPointerCancel);
+      domElement.removeEventListener('pointermove', onPointerMove, { passive: true });
+      domElement.removeEventListener('pointerleave', onPointerLeave, { passive: true });
+      domElement.removeEventListener('pointercancel', onPointerCancel, { passive: true });
     }
   };
 }
