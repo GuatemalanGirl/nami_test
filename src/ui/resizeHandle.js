@@ -1,7 +1,6 @@
 // ui/resizeHandle.js
 
 import * as THREE from 'three';
-import { getCurrentWall } from '../domain/wall.js';
 
 let resizeHandleMesh = null; // 핸들러 메쉬
 
@@ -33,7 +32,7 @@ function getHandlesRoot(scene) {
 }
 // ───────────────────────────────────────────────────────────────
 
-// [추가] 공통 유틸: 로컬 바운딩박스의 우상단 코너를 월드 좌표로 변환
+// 공통 유틸: 로컬 바운딩박스의 우상단 코너를 월드 좌표로 변환
 function getTopRightWorldCorner(mesh, outwardOffset = 0.02) {
   if (!mesh || !mesh.geometry) return null;
 
@@ -59,9 +58,40 @@ function getTopRightWorldCorner(mesh, outwardOffset = 0.02) {
   return worldCorner;
 }
 
-export function createResizeHandle(mesh, scene) {
+/** 터치 친화적인 보이지 않는 히트 프록시를 핸들에 부착 */
+export function addHitProxyToResizeHandle(handle, opts = {}) {
+  if (!handle || handle.getObjectByName('hitProxy')) return;
+
+  const scale = opts.scale ?? 2.0;           // 히트 영역 배수 (1.5~2.5 추천)
+  // 핸들의 가시 크기를 기준으로 대략 반경 추정
+  const bbox = new THREE.Box3().setFromObject(handle);
+  const size = new THREE.Vector3();
+  bbox.getSize(size);
+  const baseRadius = Math.max(size.x, size.y, size.z) * 0.5 || 0.03;
+
+  const geo = new THREE.SphereGeometry(baseRadius * scale, 16, 16);
+  const mat = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0.0,                 // 보이지 않음
+    depthTest: false,
+    depthWrite: false
+  });
+  const proxy = new THREE.Mesh(geo, mat);
+  proxy.name = 'hitProxy';
+
+  // 드래그 대상(mesh)을 그대로 전달
+  proxy.userData.targetMesh = handle.userData?.targetMesh ?? null;
+
+  // 핸들과 동일한 위치/회전
+  proxy.position.set(0, 0, 0);
+  proxy.quaternion.identity();
+
+  handle.add(proxy);
+}
+
+export function createResizeHandle(mesh, scene, options = {}) {
   // 핸들러가 이미 있으면 삭제
-  // (기존: scene.remove(resizeHandleMesh) → [개선] 부모가 누군지 몰라도 안전하게 제거)
+  // (기존: scene.remove(resizeHandleMesh) -> [개선] 부모가 누군지 몰라도 안전하게 제거)
   if (resizeHandleMesh) {
     resizeHandleMesh.parent?.remove(resizeHandleMesh);
     resizeHandleMesh = null;
@@ -79,15 +109,17 @@ export function createResizeHandle(mesh, scene) {
     return null;
   }
 
-  // [핵심 수정] scene이 undefined여서 `.add`에서 터지던 문제를 해결
+  // scene이 undefined여서 `.add`에서 터지던 문제를 해결
   const resolvedScene = resolveScene(mesh, scene);
   if (!resolvedScene) {
     console.warn('createResizeHandle: cannot resolve THREE.Scene');
     return null;
   }
 
-  const handleWidth = 0.5;
-  const handleHeight = 0.5;
+  // 옵션(선택): 핸들 크기/색상/히트프록시 배수 조절
+  const handleWidth  = options.width  ?? 0.5;
+  const handleHeight = options.height ?? 0.5;
+  const color        = options.color  ?? 0xffff00;
   let handleDepth, geom;
 
   if (mesh.geometry.type === "BoxGeometry") {
@@ -98,32 +130,41 @@ export function createResizeHandle(mesh, scene) {
     handleDepth = 0.01; // 평면 핸들러라면
     geom = new THREE.PlaneGeometry(handleWidth, handleHeight);
   } else {
-    // [추가] 지원하지 않는 지오메트리 타입 방어
+    // 지원하지 않는 지오메트리 타입 방어
     console.warn(`createResizeHandle: unsupported geometry type "${mesh.geometry.type}"`);
     geom = new THREE.PlaneGeometry(handleWidth, handleHeight);
   }
 
   const mat = new THREE.MeshBasicMaterial({
-    color: 0xffff00,
+    color,
     transparent: true,
     opacity: 0.8,
     side: THREE.DoubleSide,
+    depthTest: false // 항상 보이도록(다른 오브젝트 뒤에 가려지지 않게)
   });
   resizeHandleMesh = new THREE.Mesh(geom, mat);
   resizeHandleMesh.userData.targetMesh = mesh;
 
-  // [핵심 수정] scene에 바로 붙이지 말고, 공용 핸들 루트에 부착(없으면 생성)
+  // scene에 바로 붙이지 말고, 공용 핸들 루트에 부착(없으면 생성)
   const parentForHandle = getHandlesRoot(resolvedScene) ?? resolvedScene;
   parentForHandle.add(resizeHandleMesh);
 
   // 최초 위치는 대상의 로컬 우상단 코너(월드 변환)로 시작
-  // [핵심 수정] 월드 AABB가 아니라 로컬 바운딩박스 + localToWorld 사용
-  const initialPos = getTopRightWorldCorner(mesh, /* outwardOffset */ 0.02);
+  // 월드 AABB가 아니라 로컬 바운딩박스 + localToWorld 사용
+  const initialPos = getTopRightWorldCorner(mesh, /* outwardOffset */ options.outwardOffset ?? 0.02);
   if (initialPos) resizeHandleMesh.position.copy(initialPos);
 
   // 오브젝트의 회전을 따라가도록 정렬
   resizeHandleMesh.quaternion.copy(mesh.quaternion);
   resizeHandleMesh.visible = true;
+
+  // 항상 최상단 렌더링(시각/선택 용이)
+  resizeHandleMesh.renderOrder = 9999;
+
+  // 터치 히트박스 확장: 보이지 않는 프록시 자식 추가(옵션으로 끌 수 있음)
+  if (options.hitProxy !== false) {
+    addHitProxyToResizeHandle(resizeHandleMesh, { scale: options.hitProxyScale ?? 2.0 });
+  }
 
   return resizeHandleMesh;
 }
@@ -132,9 +173,9 @@ export function updateResizeHandlePosition(mesh, options = {}) {
   if (!mesh) return;
   if (!resizeHandleMesh) return;
 
-  // [핵심 수정] 이전 버전은 월드 AABB(Box3.setFromObject) + 벽면 스위치(getCurrentWall)로 계산
-  //            회전/스케일/벽 방향에 따라 코너가 어긋났음.
-  //            → 로컬 바운딩박스 우상단을 localToWorld로 변환하여 항상 동일 기준으로 위치 계산.
+  // 이전 버전은 월드 AABB(Box3.setFromObject) + 벽면 스위치(getCurrentWall)로 계산
+  // 회전/스케일/벽 방향에 따라 코너가 어긋났음.
+  // -> 로컬 바운딩박스 우상단을 localToWorld로 변환하여 항상 동일 기준으로 위치 계산.
   const outwardOffset = options.outwardOffset ?? 0.02;
 
   const pos = getTopRightWorldCorner(mesh, outwardOffset);
@@ -152,7 +193,7 @@ export function getResizeHandleMesh() {
 
 export function removeResizeHandle(scene) {
   if (resizeHandleMesh) {
-    // [개선] scene 인자 없이도 안전 제거
+    // scene 인자 없이도 안전 제거
     resizeHandleMesh.parent?.remove(resizeHandleMesh);
     resizeHandleMesh = null;
   }
