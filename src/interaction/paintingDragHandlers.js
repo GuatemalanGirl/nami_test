@@ -56,6 +56,18 @@ export function registerPaintingDragHandlers(domElement, {
   let primaryPointerId = null;
   let multiTouch = false;
 
+  // 안드로이드(Samsung Internet 등) pointerup 좌표 폴백용
+  let lastClientPos = { x: 0, y: 0 };
+  function getSafeClientXY(e) {
+    let x = e?.clientX, y = e?.clientY;
+    // 일부 브라우저에서 pointerup이 0,0 또는 undefined로 올 수 있어 폴백
+    if (x == null || y == null || (x === 0 && y === 0)) {
+      x = lastClientPos.x;
+      y = lastClientPos.y;
+    }
+    return { x, y };
+  }
+
   // 드래그 중 OrbitControls 잠깐 비활성화를 "원래 상태로 복원"되게 처리
   let __controlsPrev = null;
   const snapshotControls = () => {
@@ -114,6 +126,72 @@ export function registerPaintingDragHandlers(domElement, {
     dwellMs: 100,
     cooldownMs: 500
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // 드롭 순간(또는 cancel)에도 정확히 벽에 스냅되게 하는 유틸
+  //  - 현재 벽 히트 실패 시, 4면 전체에서 첫 히트를 검색
+  //  - 경계 클램프 + 노멀 정렬까지 한 번 더 보장
+  function finalizeDropAtClientXY(clientXY, {
+    domElement, camera, raycaster, scene,
+    getCurrentWall, ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH
+  }, sel) {
+    if (!sel) return;
+
+    const rect = domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((clientXY.x - rect.left) / rect.width) * 2 - 1,
+      -((clientXY.y - rect.top) / rect.height) * 2 + 1
+    );
+    raycaster.setFromCamera(mouse, camera);
+
+    // 1) 우선 현재 벽
+    const curr = scene.getObjectByName(getCurrentWall());
+    let hit = curr ? raycaster.intersectObject(curr, true)[0] : null;
+
+    // 2) 실패 시 4면 모두 검사(옆 벽으로 넘긴 경우)
+    if (!hit) {
+      const walls = ['front','back','left','right']
+        .map(n => scene.getObjectByName(n))
+        .filter(Boolean);
+      hit = raycaster.intersectObjects(walls, true)[0] || null;
+    }
+    if (!hit) return;
+
+    const wallMesh = hit.object;
+    const point = hit.point.clone();
+    const normal = hit.face.normal.clone().transformDirection(wallMesh.matrixWorld);
+    point.add(normal.multiplyScalar(0.05)); // 벽에서 살짝 띄우기
+
+    // 경계 클램프
+    const box = new THREE.Box3().setFromObject(sel);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const halfW = ROOM_WIDTH/2, halfH = ROOM_HEIGHT/2, halfD = ROOM_DEPTH/2;
+    const hw = size.x/2, hh = size.y/2, hd = size.z/2;
+
+    const name = wallMesh.name; // 'front'|'back'|'left'|'right'
+    switch (name) {
+      case 'front':
+      case 'back':
+        point.x = THREE.MathUtils.clamp(point.x, -halfW+hw,  halfW-hw);
+        point.y = THREE.MathUtils.clamp(point.y, -halfH+hh,  halfH-hh);
+        break;
+      case 'left':
+      case 'right':
+        point.z = THREE.MathUtils.clamp(point.z, -halfD+hd,  halfD-hd);
+        point.y = THREE.MathUtils.clamp(point.y, -halfH+hh,  halfH-hh);
+        break;
+    }
+
+    sel.position.copy(point);
+
+    // 회전(노멀 정렬)
+    const q = new THREE.Quaternion().setFromUnitVectors(forward, normal.clone().normalize());
+    sel.quaternion.slerp(q, 0.35);
+
+    // 선택: 소속 벽 메타 갱신(좌표 기반 detectWall을 쓴다면 없어도 무방)
+    sel.userData.wall = name;
+  }
+  // ─────────────────────────────────────────────────────────────
 
   // -----------------------------
   // 마우스/터치 드래그로 그림 위치 이동
@@ -178,7 +256,7 @@ export function registerPaintingDragHandlers(domElement, {
 
     // 포인터 집계 업데이트
     activePointers.delete(e.pointerId);
-    // ★ 남은 포인터 수를 기준으로 재계산 (버그 픽스: 1개 남아도 true였던 문제)
+    // 남은 포인터 수를 기준으로 재계산 (버그 픽스: 1개 남아도 true였던 문제)
     multiTouch = activePointers.size >= 2;
     if (activePointers.size === 0) {
       primaryPointerId = null;
@@ -212,6 +290,18 @@ export function registerPaintingDragHandlers(domElement, {
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (isDragging) {
+      // 드래그 종료 시, 일부 브라우저에서 마지막 move가 누락될 수 있어 한 번 더 스냅
+      const sel = getSelectedPainting?.();
+      if (sel) {
+        const client = getSafeClientXY(e);
+        finalizeDropAtClientXY(client, {
+          domElement,
+          camera, raycaster, scene,
+          getCurrentWall,
+          ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH
+        }, sel);
+      }
+
       wasDragging = true;
       if (getPaintingMode?.()) updatePaintingOrderByPosition();
       // 드래그로 끝났을 때는 추가 동작 없음
@@ -252,6 +342,10 @@ export function registerPaintingDragHandlers(domElement, {
     if (anyResizing()) return;
     if (!anyModeActive() || !dragStartScreen) return;
 
+    // 최근 좌표를 계속 저장 (안드로이드 pointerup 폴백용)
+    lastClientPos.x = e.clientX;
+    lastClientPos.y = e.clientY;
+
     // 멀티터치 중엔 드래그 차단 (핀치/팬은 OrbitControls에게)
     if (multiTouch) return;
 
@@ -265,7 +359,7 @@ export function registerPaintingDragHandlers(domElement, {
     if (!isDragging && Math.sqrt(dx * dx + dy * dy) > dragThreshold) {
       if (!hasDragTarget) return; // 타깃 없으면 드래그 시작 안 함
       isDragging = true;
-      lockControls(); // ★ 드래그 중 OrbitControls 비활성화 (종료 시 원상복구)
+      lockControls(); // 드래그 중 OrbitControls 비활성화 (종료 시 원상복구)
 
       if (getPaintingMode?.()) {
         if (getEditingPainting?.()) {
@@ -354,6 +448,20 @@ export function registerPaintingDragHandlers(domElement, {
   // pointercancel: 캡처 해제 + 상태 리셋(안전)
   domElement.addEventListener("pointercancel", (e) => {
     if (!anyModeActive() || !dragStartScreen) return;
+
+    // 드래그 중이었다면 마지막 좌표로 한 번 더 스냅(브라우저 별 cancel 대응)
+    if (isDragging) {
+      const sel = getSelectedPainting?.();
+      if (sel) {
+        const client = getSafeClientXY(e);
+        finalizeDropAtClientXY(client, {
+          domElement,
+          camera, raycaster, scene,
+          getCurrentWall,
+          ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH
+        }, sel);
+      }
+    }
 
     // 포인터 집계 리셋
     activePointers.delete(e.pointerId);
