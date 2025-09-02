@@ -1,3 +1,5 @@
+/* src/styles/base.css */
+
 /* ===== Base: body / canvas / button ===== */
 
 body {
@@ -94,4 +96,50 @@ button {
   bottom: 0px;
   transform: translateX(-50%);
   z-index: 1001;
+}
+
+/* 3D 화폭: 브라우저 제스처를 막고(pointer 이벤트 받게) */
+.app__stage, canvas, [data-stage] {
+  touch-action: none;            /* pinch/drag를 우리가 처리 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 일반 UI: 탭/스크롤은 기본 동작으로 */
+button, [data-ui] {
+  touch-action: manipulation;    /* 클릭 지연 X, 기본 탭 허용 */
+}
+
+/* 풀스크린 스크롤 컨테이너는 수직 스크롤만 명시 */
+.scroll-y, .panel-scroll { touch-action: pan-y; }
+
+/* 상단/하단 스와이프로 페이지가 튕기지 않게 (선택) */
+html, body { overscroll-behavior: none; }
+
+/* --- Touch/Pointer polish ----------------------------------- */
+
+/* 1) 캔버스: 하이라이트/콜아웃 제거 (모바일 탭 반응 개선) */
+canvas {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* 2) 오버레이/모달: 스크롤 격리(배경 흔들림 방지) */
+#infoModal,
+#paintingStoryEditorOverlay,
+#introTextEditorOverlay,
+.settings-panel {
+  overscroll-behavior: contain;
+}
+
+.panel-scroll {
+  -webkit-overflow-scrolling: touch; /* iOS 가속 스크롤 */
+}
+
+/* 3) 아이콘 버튼도 탭 최적화 */
+.icon-btn { touch-action: manipulation; }
+
+/* 4) 코스 포인터 환경(터치)에서 최소 터치 영역 보정(선택) */
+@media (pointer: coarse) {
+  .icon-btn.sm { width: 44px; height: 44px; } /* 디자인 허용 범위에서 */
 }
