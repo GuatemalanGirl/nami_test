@@ -21,6 +21,7 @@ import { getPaintingMode } from '../domain/paintingMode.js';
 // 공통 차단 유틸: cancelable일 때만 preventDefault 호출
 function stopEvent(e) {
   e.stopPropagation();
+  // 터치/휠 등에서 기본 제스처를 확실히 막기 위해
   if (e.cancelable) e.preventDefault();
 }
 
@@ -89,15 +90,41 @@ export function globalInputBlocker(e) {
  * 주요 입력 이벤트에 대해 globalInputBlocker를 캡처 단계에서 등록
  * (실제 프로젝트에선 DOMContentLoaded 이후 한 번만 호출하면 됨)
  */
+
+// 중복 등록 방지 플래그
+let __gibRegistered = false;
+
 export function registerGlobalInputBlocker() {
+  if (__gibRegistered) return;
+  __gibRegistered = true;
+
   // 캡처링 단계에서 클릭/포인터 등 전역 차단
-  ["mousedown", "mouseup", "click", "pointerdown", "pointerup"].forEach(
+  // - pointercancel 추가(터치 제스처 중단 시 일관성 유지)
+  // - dblclick 추가(데스크톱 더블클릭도 동일 정책 적용)
+  ["mousedown", "mouseup", "click", "dblclick", "pointerdown", "pointerup", "pointercancel"].forEach(
     (type) => {
       document.addEventListener(type, globalInputBlocker, true);
     }
   );
+
   // 스크롤 관련(터치/휠) 이벤트에서 preventDefault 사용 가능하게 passive: false로 등록
-  ["touchstart", "touchmove", "wheel"].forEach((type) => {
+  // - contextmenu 추가(롱프레스/우클릭 컨텍스트 메뉴 억제, 필요한 상태에서만 stopEvent됨)
+  ["touchstart", "touchmove", "wheel", "contextmenu"].forEach((type) => {
     document.addEventListener(type, globalInputBlocker, { capture: true, passive: false });
+  });
+}
+
+// 해제 함수(테스트/페이지 전환 시 유용)
+export function unregisterGlobalInputBlocker() {
+  if (!__gibRegistered) return;
+  __gibRegistered = false;
+
+  ["mousedown", "mouseup", "click", "dblclick", "pointerdown", "pointerup", "pointercancel"].forEach(
+    (type) => {
+      document.removeEventListener(type, globalInputBlocker, true);
+    }
+  );
+  ["touchstart", "touchmove", "wheel", "contextmenu"].forEach((type) => {
+    document.removeEventListener(type, globalInputBlocker, { capture: true, passive: false });
   });
 }
