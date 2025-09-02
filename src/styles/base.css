@@ -7,7 +7,6 @@ body {
 body:active {
   cursor: grabbing;
 }
-
 canvas {
   display: block;
 }
@@ -23,23 +22,12 @@ canvas.grab:active {
 
 /* 전역 버튼 기본값 (색/반경은 토큰 사용) */
 button {
-  font-size: 20px;
-  padding: 10px 20px;
-  margin: 5px;
-  border-radius: 15px;
-  width: 60px;
-  height: 60px;
-  cursor: pointer;
-  background-color: var(--color-accent);
-  color: var(--color-bg-light);
+  background: none;
   border: none;
+  cursor: pointer;
   transition: background-color 0.3s ease;
-
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-}
-button:hover {
-  background-color: var(--color-accent-hover);
 }
 
 /* ───────── Icon Button (공통) ─────────

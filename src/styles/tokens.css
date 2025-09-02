@@ -13,6 +13,7 @@
   --color-bg-light: #ffffff;
 
   /* 라운드 */
+  --radius-sm: 10px;
   --radius-md: 15px;  /* 일반 버튼, nav 버튼 */
   --radius-lg: 28px;  /* 토글 버튼 */
 
@@ -20,7 +21,7 @@
   --gap-sm: 10px;     /* direction-row 등 */
 
   /* 그림자 */
-  --shadow-sm: 0 2px 6px rgba(0,0,0,.3); /* 토글 버튼 */
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3); /* 토글 버튼 */
 
   /* 모달 */
   --modal-bg: rgba(255, 255, 255, 0.9);

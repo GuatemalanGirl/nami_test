@@ -501,7 +501,7 @@ button.nav-toggle:hover {
 .button-row {
   display: flex;
   justify-content: center; /* 좌우로 나눔 */
-  gap: var(--gap-sm, px); /* 버튼 사이 간격 */
+  gap: var(--gap-sm, 10px); /* 버튼 사이 간격 */
   width: calc(100% + var(--panel-gutter-left) + var(--panel-pad-right));
   margin-left: calc(-1 * var(--panel-gutter-left));
   margin-right: calc(-1 * var(--panel-pad-right));
