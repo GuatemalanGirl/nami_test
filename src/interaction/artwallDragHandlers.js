@@ -1,5 +1,4 @@
 // interaction/artwallDragHandlers.js
-
 import * as THREE from 'three'
 // -------------------------------------------------------------
 // [ARTWALL] 아트월 드래그, 클릭, 편집, 이동 이벤트 핸들러 모듈
@@ -54,6 +53,18 @@ export function registerArtwallDragHandlers(domElement, {
   // 현재 선택된 아트월(로컬 관리; 아트월 전용)
   let selectedArtwall = null
 
+  // 추가: 멀티터치/포인터 관리 (핀치 중 드래그 차단)
+  const activePointers = new Set()
+  let primaryPointerId = null
+  let multiTouch = false
+
+  // 추가: 드래그 중 OrbitControls 잠깐 비활성화
+  const setControlsEnabled = (on) => {
+    if (!controls) return
+    if (typeof controls.setEnabled === 'function') controls.setEnabled(!!on)
+    else controls.enabled = !!on
+  }
+
   // 게이트 함수 (painting 구조와 동일한 패턴)
   const isModeActive   = () => !!getArtwallMode?.()
   const isAnyResizing  = () => !!getIsResizingArtwall?.()
@@ -66,20 +77,19 @@ export function registerArtwallDragHandlers(domElement, {
   // 엣지-드래그 네비게이터 (painting과 동일 구조)
   const edgeNav = createEdgeWallNavigator({
     domElement,
-    isActive:   () => isModeActive() && hasDragTargetArt, // ★ 타깃 있을 때만
+    isActive:   () => isModeActive() && hasDragTargetArt && !multiTouch, // 멀티터치 제외
     isDragging: () => isDragging,
     isResizing: () => isAnyResizing(),
     isMoving:   () => !!getCameraMovingState?.(),
     onBeforeNavigate: () => {
       try { endEditingArtwall?.(scene, editingButtonsDiv) } catch {}
-      // 드래그 연속성 유지: 선택/드래그 상태는 유지하고 pointerup만 억제
       suppressNextPointerUp = true
     },
     goLeft:  () => goToLeftWall(camera, controls),
     goRight: () => goToRightWall(camera, controls),
-    edgePct: 0.08,   // 좌/우 8%
-    dwellMs: 100,    // 100ms 머물면 전환
-    cooldownMs: 500  // 재트리거 대기
+    edgePct: 0.08,
+    dwellMs: 100,
+    cooldownMs: 500
   })
 
   // -----------------------------
@@ -88,6 +98,14 @@ export function registerArtwallDragHandlers(domElement, {
   domElement.addEventListener('pointerdown', (e) => {
     if (isAnyResizing()) return
     if (!isModeActive()) return
+
+    // 포인터 집계
+    activePointers.add(e.pointerId)
+    if (primaryPointerId == null) primaryPointerId = e.pointerId
+    multiTouch = activePointers.size >= 2
+
+    // 기본 제스처 방지 (CSS에 touch-action:none 권장)
+    if (e.cancelable) e.preventDefault()
 
     pointerDownTime  = Date.now()
     dragStartScreen  = { x: e.clientX, y: e.clientY }
@@ -119,28 +137,32 @@ export function registerArtwallDragHandlers(domElement, {
       endEditingArtwall?.(scene, editingButtonsDiv)
     }
 
-    // 엣지 네비 시작(타깃/플래그 확정 이후)
     edgeNav.onDragStart()
 
-    // 사이드 패널 위에서도 이벤트 유지
     try { domElement.setPointerCapture?.(e.pointerId) } catch {}
-  })
+  }, { passive:false }) // 터치 제스처 제어를 위해 passive:false
 
   // -----------------------------
   // pointermove: 드래그 이동
   // -----------------------------
   domElement.addEventListener('pointermove', (e) => {
     if (isAnyResizing()) return
-    if (!isModeActive() || !(e.buttons & 1) || !dragStartScreen) return
+    if (!isModeActive() || !dragStartScreen) return
+
+    // 핀치/멀티터치 중에는 드래그 금지 (OrbitControls에게 맡김)
+    if (multiTouch) return
+
+    // 터치 스크롤 등 기본 제스처 억제
+    if (e.cancelable && e.pointerType !== 'mouse') e.preventDefault()
 
     const dx = e.clientX - dragStartScreen.x
     const dy = e.clientY - dragStartScreen.y
 
+    // 기존: !(e.buttons & 1) 체크 제거 → 터치에서도 드래그 시작 가능
     if (!isDragging && Math.hypot(dx, dy) > dragThreshold) {
-      // 드래그 시작은 타깃이 있을 때만
       if (!hasDragTargetArt || !selectedArtwall) return
       isDragging = true
-      // 드래그 시작 → 편집 패널/버튼 숨김
+      setControlsEnabled(false) // 드래그 중 OrbitControls 비활성화
       try { endEditingArtwall?.(scene, editingButtonsDiv) } catch {}
     }
 
@@ -194,10 +216,8 @@ export function registerArtwallDragHandlers(domElement, {
     // 회전(노멀 정렬): forward(+Z) -> 벽 노멀(n) 방향으로 회전
     tmpNorm.copy(n).normalize()
     tmpQuat.setFromUnitVectors(forward, tmpNorm)
-    // 부드럽게 보간(원하면 0.2~0.5 사이로 조절)
     selectedArtwall.quaternion.slerp(tmpQuat, 0.35)
-    // 즉시 정렬 원하면: selectedArtwall.quaternion.copy(tmpQuat)
-  })
+  }, { passive:false }) // preventDefault 허용
 
   // -----------------------------
   // pointerup: 클릭/드래그 종료
@@ -206,16 +226,27 @@ export function registerArtwallDragHandlers(domElement, {
     if (isAnyResizing()) return
     if (!isModeActive() || !dragStartScreen) return
 
-    // 엣지 네비 직후 억제 분기
+    // 포인터 집계 업데이트
+    activePointers.delete(e.pointerId)
+    if (activePointers.size === 0) {
+      primaryPointerId = null
+      multiTouch = false
+    } else if (primaryPointerId === e.pointerId) {
+      primaryPointerId = [...activePointers][0]
+    }
+
+    // 멀티터치 직후의 pointerup은 판정 제외
+    if (multiTouch) return
+
     if (suppressNextPointerUp) {
       suppressNextPointerUp = false
       dragStartScreen = null
       pointerDownTime = 0
       isDragging = false
-      // 선택/드래그 연속성을 유지하고 싶으면 아래 두 줄을 주석 처리
       selectedArtwall = null
       hasDragTargetArt = false
       edgeNav.onDragEnd()
+      setControlsEnabled(true) // 컨트롤 복귀
       try { domElement.releasePointerCapture?.(e.pointerId) } catch {}
       return
     }
@@ -229,7 +260,7 @@ export function registerArtwallDragHandlers(domElement, {
 
     if (isDragging) {
       wasDragging = true
-      // (아트월은 별도 정렬 없음 — 필요시 여기서 호출)
+      // (아트월은 별도 정렬 없음)
     } else {
       wasDragging = false
       // 클릭 → 편집 진입
@@ -249,15 +280,24 @@ export function registerArtwallDragHandlers(domElement, {
     selectedArtwall = null
     hasDragTargetArt = false
     edgeNav.onDragEnd()
+    setControlsEnabled(true) // 컨트롤 복귀
 
     try { domElement.releasePointerCapture?.(e.pointerId) } catch {}
-  })
+  }, { passive:true })
 
   // -----------------------------
   // pointercancel: 안전 리셋
   // -----------------------------
   domElement.addEventListener('pointercancel', (e) => {
     if (!isModeActive() || !dragStartScreen) return
+
+    // 포인터 집계 리셋
+    activePointers.delete(e.pointerId)
+    if (activePointers.size === 0) {
+      primaryPointerId = null
+      multiTouch = false
+    }
+
     suppressNextPointerUp = false
     dragStartScreen = null
     pointerDownTime = 0
@@ -265,6 +305,8 @@ export function registerArtwallDragHandlers(domElement, {
     selectedArtwall = null
     hasDragTargetArt = false
     edgeNav.onDragEnd()
+    setControlsEnabled(true) // 컨트롤 복귀
+
     try { domElement.releasePointerCapture?.(e.pointerId) } catch {}
-  })
+  }, { passive:true })
 }
