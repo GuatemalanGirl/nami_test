@@ -13,6 +13,9 @@ import { showOutline } from '../ui/outline.js';
 import { updateIntroTextPlaneFromHTML } from '../ui/updateIntroTextPlane.js'
 
 let isResizingWithHandle = false;
+// 터치 안정화: 어느 포인터가 리사이즈 중인지 고정
+let activePointerId = null;
+
 const dragPlane = new THREE.Plane();
 const dragStartPoint = new THREE.Vector3();
 const dragCurrentPoint = new THREE.Vector3();
@@ -24,15 +27,22 @@ export function onResizeHandlePointerDown(event, raycaster, pointer, camera, ren
   const resizeHandleMesh = getResizeHandleMesh();
   if (!resizeHandleMesh) return;
 
+  // 터치 스크롤/더블탭 확대 방지
+  if (event.cancelable) event.preventDefault();
+
   updatePointer(event, pointer, renderer);
   raycaster.setFromCamera(pointer, camera);
-  const hits = raycaster.intersectObject(resizeHandleMesh);
+  const hits = raycaster.intersectObject(resizeHandleMesh, true); // 자식까지 감지
 
   if (hits.length) {
     const mesh = resizeHandleMesh.userData.targetMesh;
-    if (!mesh) return; // 추가: null 안전!
+    if (!mesh) return; // null 안전!
 
     isResizingWithHandle = true;
+    activePointerId = event.pointerId; // 이 포인터만 추적
+
+    // 캔버스에서 제스처가 끊기지 않도록(가능한 경우)
+    try { event.target.setPointerCapture?.(event.pointerId); } catch {}
 
     dragPlane.setFromNormalAndCoplanarPoint(
       camera.getWorldDirection(new THREE.Vector3()).negate(),
@@ -40,7 +50,7 @@ export function onResizeHandlePointerDown(event, raycaster, pointer, camera, ren
     );
     raycaster.ray.intersectPlane(dragPlane, dragStartPoint);
 
-    mesh.userData._resizeOrigScale = mesh.userData.originalScale.clone();
+    mesh.userData._resizeOrigScale = mesh.userData.originalScale?.clone();
   }
 }
 
@@ -51,11 +61,17 @@ export function onResizeHandlePointerMove(event, raycaster, pointer, camera, ren
   const resizeHandleMesh = getResizeHandleMesh();
   if (!isResizingWithHandle || !resizeHandleMesh) return;
 
+  // 다른 손가락/마우스 포인터의 move 이벤트는 무시
+  if (activePointerId !== null && event.pointerId !== activePointerId) return;
+
   const mesh = resizeHandleMesh.userData.targetMesh;
-  if (!mesh) return; // 추가: null 안전!
+  if (!mesh) return; // null 안전!
 
   const orig = mesh.userData._resizeOrigScale;
-  if (!orig) return; // 추가: null 안전!
+  if (!orig) return; // null 안전!
+
+  // 터치 제스처 충돌 방지
+  if (event.cancelable && event.pointerType !== 'mouse') event.preventDefault();
 
   updatePointer(event, pointer, renderer);
   raycaster.setFromCamera(pointer, camera);
@@ -69,7 +85,7 @@ export function onResizeHandlePointerMove(event, raycaster, pointer, camera, ren
   const localCurrent = mesh.worldToLocal(dragCurrentPoint.clone());
   const deltaLocal = localCurrent.clone().sub(localStart);
 
-  // 핸들러 크기 조절 범위 -> 최소 0.5배, 최대 2배
+  // 크기 조절 범위
   const MIN_SCALE = 0.5;
   const MAX_SCALE = 2.0;
 
@@ -86,7 +102,7 @@ export function onResizeHandlePointerMove(event, raycaster, pointer, camera, ren
     // 쉬프트키 누르면 정비율(정사각형)
     if (event.shiftKey) {
       const factor =
-        Math.max(Math.abs(factorX), Math.abs(factorY)) * Math.sign(factorY);
+        Math.max(Math.abs(factorX), Math.abs(factorY)) * Math.sign(factorY || 1);
       mesh.scale.x = orig.x * factor;
       mesh.scale.y = orig.y * factor;
     } else {
@@ -95,7 +111,7 @@ export function onResizeHandlePointerMove(event, raycaster, pointer, camera, ren
     }
     // z(두께)는 그대로 유지!
   } else {
-    // ---- 기존 그림(정사각형 등) → 비율 고정 크기조절 ----
+    // ---- 기존 그림(정사각형 등) -> 비율 고정 크기조절 ----
     let factor = 1 + deltaLocal.y;
     const clampedFactor = Math.max(MIN_SCALE, Math.min(MAX_SCALE, factor));
     mesh.scale.set(orig.x * clampedFactor, orig.y * clampedFactor, orig.z);
@@ -113,14 +129,15 @@ export function onResizeHandlePointerMove(event, raycaster, pointer, camera, ren
 /**
  * pointerup: 크기 조절 종료
  */
-export function onResizeHandlePointerUp(scene) {
+export function onResizeHandlePointerUp(scene /* <- 기존 시그니처 유지 */) {
   const resizeHandleMesh = getResizeHandleMesh();
   if (!isResizingWithHandle || !resizeHandleMesh) return;
 
   isResizingWithHandle = false;
+  activePointerId = null; // 리셋
 
   const mesh = resizeHandleMesh.userData.targetMesh;
-  if (!mesh || !mesh.userData.originalScale) return; // 추가: null 안전!
+  if (!mesh || !mesh.userData.originalScale) return; // null 안전!
 
   mesh.userData.scaleValue = mesh.scale.x / mesh.userData.originalScale.x;
 
@@ -128,6 +145,8 @@ export function onResizeHandlePointerUp(scene) {
   if (mesh.userData.type?.startsWith('intro') && mesh.userData.html) {
     updateIntroTextPlaneFromHTML(mesh, mesh.userData.html);
   }
+
+  // 캡처 해제는 호출부에서 pointerup 이벤트 객체로 처리(이 모듈은 시그니처 유지)
 }
 
 // getter
