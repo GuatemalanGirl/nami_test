@@ -11,7 +11,7 @@ import { addDefaultLights } from './src/core/lighting.js'
 import { createRenderer } from "./src/core/renderer.js"
 import { createScene } from "./src/core/scene.js"
 import { createRaycaster } from './src/core/raycaster.js';
-import { createPointer } from './src/core/pointer.js';
+import { createPointer, updatePointer } from './src/core/pointer.js'; // 캔버스 기준 좌표 계산 유틸 포함
 import {
   fetchArtwallsData
 } from './src/data/artwall.js'
@@ -92,10 +92,12 @@ import { markAsColorTexture } from "./src/core/colorManagement.js"
 let scene, camera, renderer, controls, raycaster, pointer, quill;
 
 let editingButtonsDiv = document.getElementById("paintingEditButtons") // 하단 버튼 컨테이너
-// 편집버튼 클릭 시, 이벤트 전파 차단 (편집 종료 안 되게!)
-editingButtonsDiv.addEventListener("mousedown", function (e) {
-  e.stopPropagation()
-})
+// 편집버튼 클릭 시, 이벤트 전파 차단 (편집 종료 안 되게)
+if (editingButtonsDiv) { // 널 가드
+  editingButtonsDiv.addEventListener("mousedown", function (e) {
+    e.stopPropagation()
+  })
+}
 
 const textureLoader = new THREE.TextureLoader()
 
@@ -119,6 +121,11 @@ const textureLoader = new THREE.TextureLoader()
     );
   };
 })();
+
+// 일부 버전에서 색관리 플래그가 필요할 수 있음
+if (THREE.ColorManagement && 'enabled' in THREE.ColorManagement) {
+  THREE.ColorManagement.enabled = true;
+}
 
 async function init() {
   scene = createScene();
@@ -189,9 +196,10 @@ async function init() {
   document.getElementById("closeInfoButton").addEventListener("click", closeInfo)
 
   renderer.domElement.addEventListener("click", (e) => {
-    onClick(e, camera, controls, raycaster, pointer, getPaintings(), scene)
-  })
-
+    // onClick 내부에서 터치 제스처 억제 + 캔버스 기준 좌표 처리
+    onClick(e, camera, controls, raycaster, pointer, getPaintings(), scene, renderer)
+  }, { passive: true })
+  
   renderer.domElement.addEventListener("dblclick", (e) => {
     onDoubleClick(e, camera, controls, raycaster, pointer, getPaintings(), scene)
   })
@@ -271,7 +279,7 @@ function onWindowResize() {
   camera.updateProjectionMatrix()
 
   // 렌더러 픽셀 비율·사이즈 업데이트
-  renderer.setPixelRatio(window.devicePixelRatio)
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
@@ -289,7 +297,7 @@ document.getElementById("settingsToggle").addEventListener("click", () => {
 
   if (isOpen) {
     if (currentId === "panel-background" && !getSkipCancelBackground()) {
-      onRestoreTextureSet() // ← 톱니로 닫을 때 롤백
+      onRestoreTextureSet() // 톱니로 닫을 때 롤백
     }
 
     if (currentId === "panel-paintings") {
@@ -321,11 +329,11 @@ document.getElementById("settingsToggle").addEventListener("click", () => {
 })
 
 function onPointerMove(event) {
-  pointer.x = (event.clientX / window.innerWidth) * 2 - 1
-  pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
+  // 캔버스 기준 정규화 좌표 사용(레이캐스트 정확도 향상)
+  updatePointer(event, pointer, renderer)
   raycaster.setFromCamera(pointer, camera)
   const paintings = getPaintings()
-  const hits = raycaster.intersectObjects(paintings)
+  const hits = raycaster.intersectObjects(paintings, true) // 자식까지 감지(캡션 등)
   const canvas = renderer.domElement
   if (
     getZoomedInState() &&
@@ -383,11 +391,11 @@ async function initApp() {
     setupApplyButton(scene, textureLoader);
 
     // 썸네일 그리드 및 페이징 UI
-    setupArtwallPagination();       // ⬅ artwallGrid.js에서 import
-    populateArtwallGrid();          // ⬅ artwallGrid.js에서 import
+    setupArtwallPagination();       // artwallGrid.js에서 import
+    populateArtwallGrid();          // artwallGrid.js에서 import
 
-    setupPaintingPagination();      // ⬅ paintingGrid.js에서 import
-    populatePaintingGrid();         // ⬅ paintingGrid.js에서 import
+    setupPaintingPagination();      // paintingGrid.js에서 import
+    populatePaintingGrid();         // paintingGrid.js에서 import
 
     // 미리 선택된 텍스처 세트 적용
     const confirmedSet = getConfirmedTextureSet()
@@ -410,14 +418,22 @@ async function initApp() {
     const canvas = renderer.domElement;
 
     canvas.addEventListener("pointerdown", e =>
-      onResizeHandlePointerDown(e, raycaster, pointer, camera, renderer)
+      onResizeHandlePointerDown(e, raycaster, pointer, camera, renderer),
+      { passive: false } // preventDefault 허용
     );
     canvas.addEventListener("pointermove", e =>
-      onResizeHandlePointerMove(e, raycaster, pointer, camera, renderer, scene)
+      onResizeHandlePointerMove(e, raycaster, pointer, camera, renderer, scene),
+      { passive: false } // 터치 제스처 충돌 방지
     );
-    canvas.addEventListener("pointerup", () =>
-      onResizeHandlePointerUp(scene)
-    );
+    canvas.addEventListener("pointerup", (e) => {
+      try { e.target.releasePointerCapture?.(e.pointerId); } catch {}
+      onResizeHandlePointerUp(scene);
+    }, { passive: true });
+
+    canvas.addEventListener("pointercancel", (e) => {
+      try { e.target.releasePointerCapture?.(e.pointerId); } catch {}
+      onResizeHandlePointerUp(scene);
+    }, { passive: true });
 
   } catch (err) {
     alert("그림 정보를 불러오는 데 실패했습니다!");
@@ -509,4 +525,3 @@ document.addEventListener('click', (e) => {
     highlight?.classList.add('active');
   });
 });
-
