@@ -197,6 +197,7 @@ async function init() {
   scene = createScene();
   camera = createCamera();
   renderer = createRenderer(onWindowResize);
+  window.__galleryCanvas = renderer.domElement;
   raycaster = createRaycaster();
   pointer = createPointer();
   controls = createControls(camera, renderer.domElement, {
