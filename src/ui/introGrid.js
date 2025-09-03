@@ -1,6 +1,6 @@
 // ui/introGrid.js
 
-import { isCoarsePointer, dispatchSyntheticDrop } from "./touchDropFallback.js"; // ★ 터치 폴백 유틸
+import { isCoarsePointer, enableTouchDragSource } from "./touchDropFallback.js"; // ★ 터치 폴백 + 고스트
 
 const introOptions = [
   { type: 'frame',  title: '캔버스형<br>전시 글 쓰기', bg: '#ffffff' },
@@ -32,6 +32,9 @@ export function populateIntroGrid() {
     box.style.cursor = 'grab';
     // 터치에서 길게 눌러 드래그 전환 시 스크롤 과민도 완화
     box.style.touchAction = 'manipulation';
+    // 롱프레스 선택 방지
+    box.style.userSelect = 'none';
+    box.style.webkitUserSelect = 'none';
 
     // 접근성/데이터
     box.setAttribute('tabindex', '0');         // 키보드 포커스 가능
@@ -70,19 +73,10 @@ export function populateIntroGrid() {
       box.addEventListener('dragend', cleanup);
       box.addEventListener('drop', cleanup);
     } else {
-      // ── Android 등 터치 환경: 폴백(가짜 drop 캔버스로 디스패치)
-      box.addEventListener('touchend', (e) => {
-        if (e.cancelable) e.preventDefault();
-        const t = e.changedTouches && e.changedTouches[0];
-        if (!t) return;
-        // dropHandlers는 'intro-type' 키를 읽음
-        dispatchSyntheticDrop('intro-type', type, t.clientX, t.clientY); // ★
-      }, { passive: false });
-
-      // (선택) 탭으로도 배치 가능
-      box.addEventListener('click', (e) => {
-        dispatchSyntheticDrop('intro-type', type, e.clientX, e.clientY); // ★
-      });
+      // ── Android 등 터치 환경: 폴백(고스트 + synthetic drop)
+      //    손가락을 임계치 이상 이동하면 고스트가 나타나고,
+      //    손을 떼는 위치로 캔버스에 drop을 디스패치합니다.
+      enableTouchDragSource(box, 'intro-type', () => type, { ghostSize: 80, threshold: 6 });
     }
 
     // 모바일 Safari 등에서 길게 눌렀을 때 컨텍스트 메뉴 억제
@@ -101,7 +95,7 @@ export function populateIntroGrid() {
       }
     });
 
-    // ★★★ Android 등 터치 환경 폴백 DnD는 위에서 dispatchSyntheticDrop 사용으로 대체
+    // ★★★ Android 등 터치 환경 폴백 DnD는 enableTouchDragSource 사용으로 대체
 
     grid.appendChild(box);
   });

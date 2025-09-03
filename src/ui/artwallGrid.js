@@ -7,7 +7,7 @@ import {
   getTotalArtwallPages,
   getArtwallThumbUrl,
 } from "../data/artwall.js";
-import { isCoarsePointer, dispatchSyntheticDrop } from "./touchDropFallback.js"; // ★ 터치 폴백 유틸
+import { isCoarsePointer, enableTouchDragSource } from "./touchDropFallback.js"; // ★ 터치 폴백 + 고스트
 
 export function populateArtwallGrid() {
   const grid = document.getElementById("artwallGrid");
@@ -29,6 +29,8 @@ export function populateArtwallGrid() {
     img.classList.add("thumbnail");
     // 터치에서 길게 눌러 드래그 전환 시 스크롤 과민도 완화
     img.style.touchAction = "manipulation";
+    img.style.userSelect = "none";
+    img.style.webkitUserSelect = "none";
 
     // (선택) 페이지/인덱스 데이터셋
     img.dataset.page = String(getArtwallPage());
@@ -51,7 +53,6 @@ export function populateArtwallGrid() {
         } catch (_) {
           // 구형/특수 환경에서 dataTransfer 접근 불가 → 무시
         }
-
         img.classList.add("dragging");
       });
 
@@ -62,21 +63,12 @@ export function populateArtwallGrid() {
       img.addEventListener("dragend", cleanup);
       img.addEventListener("drop", cleanup);
     } else {
-      // ── Android 등 터치 환경: 폴백(가짜 drop 캔버스로 디스패치)
-      img.addEventListener(
-        "touchend",
-        (e) => {
-          if (e.cancelable) e.preventDefault();
-          const t = e.changedTouches && e.changedTouches[0];
-          if (!t) return;
-          dispatchSyntheticDrop("artwall", wall, t.clientX, t.clientY); // ★
-        },
-        { passive: false }
-      );
-
-      // (선택) 탭으로도 배치 가능
-      img.addEventListener("click", (e) => {
-        dispatchSyntheticDrop("artwall", wall, e.clientX, e.clientY); // ★
+      // ── Android 등 터치 환경: 폴백(고스트 + synthetic drop)
+      //    손가락을 임계치 이상 이동하면 고스트가 나타나고,
+      //    손을 떼는 위치로 캔버스에 drop을 디스패치합니다.
+      enableTouchDragSource(img, "artwall", () => wall, {
+        ghostSize: 80,
+        threshold: 6,
       });
     }
 
