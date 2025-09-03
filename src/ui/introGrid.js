@@ -1,6 +1,6 @@
 // ui/introGrid.js
 
-import { isCoarsePointer, dispatchSyntheticDrop } from "../touchDropFallback.js"; // ★ 터치 폴백 유틸
+import { isCoarsePointer, dispatchSyntheticDrop } from "./touchDropFallback.js"; // ★ 터치 폴백 유틸
 
 const introOptions = [
   { type: 'frame',  title: '캔버스형<br>전시 글 쓰기', bg: '#ffffff' },

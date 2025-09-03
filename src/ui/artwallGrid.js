@@ -7,7 +7,7 @@ import {
   getTotalArtwallPages,
   getArtwallThumbUrl,
 } from "../data/artwall.js";
-import { isCoarsePointer, dispatchSyntheticDrop } from "../touchDropFallback.js"; // ★ 터치 폴백 유틸
+import { isCoarsePointer, dispatchSyntheticDrop } from "./touchDropFallback.js"; // ★ 터치 폴백 유틸
 
 export function populateArtwallGrid() {
   const grid = document.getElementById("artwallGrid");

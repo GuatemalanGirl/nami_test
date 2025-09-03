@@ -1,4 +1,5 @@
 // src/ui/touchDropFallback.js
+
 export const isCoarsePointer = () =>
   (window.matchMedia && window.matchMedia("(pointer:coarse)").matches) ||
   ("ontouchstart" in window);

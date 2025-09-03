@@ -1,8 +1,9 @@
 // ui/paintingGrid.js
+
 import {
   getPage, setPage, getPaintingsByPage, getTotalPaintingPages, getPaintingThumbUrl,
 } from "../data/painting.js";
-import { isCoarsePointer, dispatchSyntheticDrop } from "../touchDropFallback.js";
+import { isCoarsePointer, dispatchSyntheticDrop } from "./touchDropFallback.js";
 
 // 썸네일 그리드 생성 + 이벤트 등록
 export function populatePaintingGrid() {
