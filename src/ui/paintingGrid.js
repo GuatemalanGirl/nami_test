@@ -70,16 +70,6 @@ export function populatePaintingGrid() {
       { passive: false }
     );
 
-    // (선택) 터치 시작 시 과도한 스크롤 방지 – 드래그로 이어질 가능성 있을 때만
-    thumb.addEventListener(
-      "touchstart",
-      (e) => {
-        // 사용자가 스크롤 의도일 수도 있으므로, 여기선 막되 최소화
-        if (e.cancelable) e.preventDefault();
-      },
-      { passive: false }
-    );
-
     grid.appendChild(thumb);
   });
 

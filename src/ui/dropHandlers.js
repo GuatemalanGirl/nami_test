@@ -83,8 +83,7 @@ export function handlePaintingDrop(rawData, scene, renderer, camera, raycaster, 
   }
 
   // ★ 캔버스 기준 NDC 좌표 일관 처리
-  const ok = updatePointer(event, ndc, renderer)
-  if (!ok) return
+  updatePointer(event, ndc, renderer)
   raycaster.setFromCamera(ndc, camera)
 
   const currentWall = getCurrentWall()
@@ -158,8 +157,7 @@ export function handlePaintingDrop(rawData, scene, renderer, camera, raycaster, 
  */
 export function handleIntroDrop(type, scene, renderer, camera, raycaster, paintings, tempIntroMeshes, isIntroMode, event) {
   // ★ 캔버스 기준 NDC 좌표 일관 처리
-  const ok = updatePointer(event, ndc, renderer)
-  if (!ok) return
+  updatePointer(event, ndc, renderer)
   raycaster.setFromCamera(ndc, camera)
 
   const currentWall = getCurrentWall()

@@ -70,15 +70,6 @@ export function populateArtwallGrid() {
       { passive: false }
     );
 
-    // (선택) 터치 시작: 드래그로 이어질 가능성 있을 때만 살짝 억제
-    img.addEventListener(
-      "touchstart",
-      (e) => {
-        if (e.cancelable) e.preventDefault();
-      },
-      { passive: false }
-    );
-
     grid.appendChild(img);
   });
 

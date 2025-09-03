@@ -73,11 +73,6 @@ export function populateIntroGrid() {
       if (e.cancelable) e.preventDefault();
     }, { passive: false });
 
-    // (선택) 터치 시작: 드래그로 이어질 가능성 있을 때만 살짝 억제
-    box.addEventListener('touchstart', (e) => {
-      if (e.cancelable) e.preventDefault();
-    }, { passive: false });
-
     // 키보드 보조(Enter/Space → 드래그 시작 유사 피드백)
     // 실제 DnD는 마우스/터치 기반이므로 시각 피드백만 제공
     box.addEventListener('keydown', (e) => {
