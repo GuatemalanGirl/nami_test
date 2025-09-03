@@ -1,93 +1,93 @@
 import * as THREE from "three"
-import { createCamera } from "./core/camera.js"
+import { createCamera } from "./src/core/camera.js"
 import {
   PAINTING_Y_OFFSET,
   ROOM_DEPTH,
   ROOM_HEIGHT,
   ROOM_WIDTH
-} from './core/constants.js'
-import { createControls } from "./core/controls.js"
-import { addDefaultLights } from './core/lighting.js'
-import { createRenderer } from "./core/renderer.js"
-import { createScene } from "./core/scene.js"
-import { createRaycaster } from './core/raycaster.js';
-import { createPointer, updatePointer } from './core/pointer.js'; // 캔버스 기준 좌표 계산 유틸 포함
+} from './src/core/constants.js'
+import { createControls } from "./src/core/controls.js"
+import { addDefaultLights } from './src/core/lighting.js'
+import { createRenderer } from "./src/core/renderer.js"
+import { createScene } from "./src/core/scene.js"
+import { createRaycaster } from './src/core/raycaster.js';
+import { createPointer, updatePointer } from './src/core/pointer.js'; // 캔버스 기준 좌표 계산 유틸 포함
 import {
   fetchArtwallsData
-} from './data/artwall.js'
+} from './src/data/artwall.js'
 import {
   fetchPaintingsData
-} from "./data/painting.js"
+} from "./src/data/painting.js"
 import {
   fetchTextureSets, setTexturePage
-} from './data/texture.js'
-import { getArtwalls, commitArtwallChanges } from './domain/artwall.js'
-import { getArtwallMode } from './domain/artwallMode.js'
-import { getSkipCancelBackground } from './domain/backgroundState.js'
-import { commitIntroChanges, getTempIntroMeshes } from './domain/intro.js'
+} from './src/data/texture.js'
+import { getArtwalls, commitArtwallChanges } from './src/domain/artwall.js'
+import { getArtwallMode } from './src/domain/artwallMode.js'
+import { getSkipCancelBackground } from './src/domain/backgroundState.js'
+import { commitIntroChanges, getTempIntroMeshes } from './src/domain/intro.js'
 import {
   commitPaintingChanges,
   getPaintings,
   getSelectedPainting,
   setSelectedPainting,
   getTempPaintings
-} from './domain/painting.js'
+} from './src/domain/painting.js'
 import {
   endEditingPainting,
   getEditingPainting,
   startEditingPainting
-} from './domain/paintingEditing.js'
-import { getPaintingMode } from './domain/paintingMode.js'
-import { getIntroMode } from "./domain/introMode.js"
-import { createRoom } from "./domain/room.js"
+} from './src/domain/paintingEditing.js'
+import { getPaintingMode } from './src/domain/paintingMode.js'
+import { getIntroMode } from "./src/domain/introMode.js"
+import { createRoom } from "./src/domain/room.js"
 import {
   getConfirmedTextureSet,
   setConfirmedTextureSet,
   setSelectedTextureSet
-} from './domain/texture.js'
-import { getCurrentWall } from './domain/wall.js'
-import { getZoomedInState } from './domain/zoomState.js'
-import { handleNavKeyDown } from './interaction/navKeyHandler.js'
-import { navigateLeft, navigateRight } from './interaction/paintingNavigation.js'
-import { moveCameraToHome, onClick, onDoubleClick } from './interaction/zoomControls.js'
-import { populateArtwallGrid, setupArtwallPagination } from "./ui/artwallGrid.js"
-import { checkExhibitPeriod } from './ui/exhibitionExpired.js'
-import { setupExhibitSettings } from './ui/exhibitionPanel.js'
-import { updateGalleryInfo } from "./ui/galleryInfo.js"
-import { closeInfo, showInfo, updatePaintingInfo } from './ui/infoModal.js'
-import { populateIntroGrid } from "./ui/introGrid.js"
-import { populatePaintingGrid, setupPaintingPagination } from "./ui/paintingGrid.js"
-import { getIsResizingPainting } from './ui/paintingResizeButtons.js'
-import { showPanel, setupPanelAutoClose } from './ui/panel.js'
-import { initSocialPanel } from './ui/socialPanel.js'
+} from './src/domain/texture.js'
+import { getCurrentWall } from './src/domain/wall.js'
+import { getZoomedInState } from './src/domain/zoomState.js'
+import { handleNavKeyDown } from './src/interaction/navKeyHandler.js'
+import { navigateLeft, navigateRight } from './src/interaction/paintingNavigation.js'
+import { moveCameraToHome, onClick, onDoubleClick } from './src/interaction/zoomControls.js'
+import { populateArtwallGrid, setupArtwallPagination } from "./src/ui/artwallGrid.js"
+import { checkExhibitPeriod } from './src/ui/exhibitionExpired.js'
+import { setupExhibitSettings } from './src/ui/exhibitionPanel.js'
+import { updateGalleryInfo } from "./src/ui/galleryInfo.js"
+import { closeInfo, showInfo, updatePaintingInfo } from './src/ui/infoModal.js'
+import { populateIntroGrid } from "./src/ui/introGrid.js"
+import { populatePaintingGrid, setupPaintingPagination } from "./src/ui/paintingGrid.js"
+import { getIsResizingPainting } from './src/ui/paintingResizeButtons.js'
+import { showPanel, setupPanelAutoClose } from './src/ui/panel.js'
+import { initSocialPanel } from './src/ui/socialPanel.js'
 import {
   applyPreviewTextureSet,
   onRestoreTextureSet,
   populateTextureGrid,
   setupApplyButton,
   setupTexturePagination
-} from './ui/textureGrid.js'
-import { addWallNavListeners, alignToCameraWall } from './ui/wallNavigation.js'
+} from './src/ui/textureGrid.js'
+import { addWallNavListeners, alignToCameraWall } from './src/ui/wallNavigation.js'
 import {
   startEditingArtwall,
   endEditingArtwall,
   getEditingArtwall
-} from './domain/artwallEditing.js'
+} from './src/domain/artwallEditing.js'
 import {
   onResizeHandlePointerDown,
   onResizeHandlePointerMove,
   onResizeHandlePointerUp,
   getIsResizingWithHandle
-} from './interaction/resizeHandles.js'
-import { animate } from './core/loop.js'
-import { getCurrentPaintingIndex } from './domain/currentPainting.js'
-import { detectWall } from "./core/order.js"
-import { registerDropEvents } from './ui/dropHandlers.js'
-import { registerPaintingDragHandlers } from './interaction/paintingDragHandlers.js';
-import { registerArtwallDragHandlers } from './interaction/artwallDragHandlers.js';
-import { setupQuillEditor } from "./ui/textEditor.js"
-import { registerGlobalInputBlocker } from './ui/globalInputBlocker.js'
-import { markAsColorTexture } from "./core/colorManagement.js"
+} from './src/interaction/resizeHandles.js'
+import { animate } from './src/core/loop.js'
+import { getCurrentPaintingIndex } from './src/domain/currentPainting.js'
+import { detectWall } from "./src/core/order.js"
+import { registerDropEvents } from './src/ui/dropHandlers.js'
+import { registerPaintingDragHandlers } from './src/interaction/paintingDragHandlers.js';
+import { registerArtwallDragHandlers } from './src/interaction/artwallDragHandlers.js';
+import { setupQuillEditor } from "./src/ui/textEditor.js"
+import { registerGlobalInputBlocker } from './src/ui/globalInputBlocker.js'
+import { markAsColorTexture } from "./src/core/colorManagement.js"
 
 let scene, camera, renderer, controls, raycaster, pointer, quill;
 
