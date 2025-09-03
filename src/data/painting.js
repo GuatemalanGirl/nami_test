@@ -100,9 +100,3 @@ export function setPage(page) {
 export function getPage() {
   return currentPage;
 }
-
-// 6. 썸네일 이미지 URL 생성 함수
-export function getPaintingThumbUrl(filename) {
-  // [개선] 공백/한글/특수문자 대응 인코딩 + 베이스 URL 사용
-  return _paintingsBase + encodeURIComponent(filename);
-}
