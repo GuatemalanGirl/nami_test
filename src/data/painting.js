@@ -5,43 +5,76 @@ export let paintingsData = [];     // 외부에서 불러온 작품 메타데이
 let currentPage = 0;
 const itemsPerPage = 9;
 
-// ─────────────────────────────────────────────────────────────
-// [개선] 외부/내부 경로를 교체할 수 있도록 베이스 URL 분리
-// 기본값: GitHub Raw. 필요 시 setPaintingBase()로 같은 오리진/CDN으로 교체.
-let _paintingsBase = "https://raw.githubusercontent.com/GuatemalanGirl/mygallery/main/paintings/";
+// ─────────────────────────────────────────────────────────
+// 기본(Primary) 메타데이터 URL: GitHub Raw
+// 옵션(Alt) 메타데이터 URL: 환경에 따라 지정 (same-origin 등)
+// 이미지/썸네일 베이스 URL도 선택적으로 오버라이드 가능
+// ─────────────────────────────────────────────────────────
+const PRIMARY_META_URL =
+  'https://raw.githubusercontent.com/GuatemalanGirl/mygallery/main/paintings/metadata.json';
 
-/** [개선] 페인팅 데이터 베이스 경로 설정 */
-export function setPaintingBase(url) {
-  if (!url) return;
-  _paintingsBase = url.endsWith("/") ? url : url + "/";
+let __ALT_META_URL = null;   // setPaintingsMetaAlt(...) 로 주입
+let __IMG_BASE = 'https://raw.githubusercontent.com/GuatemalanGirl/mygallery/main/paintings/'; // 기본 이미지 베이스
+
+/** (선택) 옵션 메타데이터 URL 지정: 기본 실패 시 이 URL을 재시도 */
+export function setPaintingsMetaAlt(url) {
+  __ALT_META_URL = url || null;
 }
 
-// 1. 외부 서버에서 작품 데이터 fetch
+/** (선택) 썸네일/원본 이미지 베이스 URL 오버라이드 */
+export function setPaintingsImageBase(base) {
+  if (!base) return;
+  __IMG_BASE = base.endsWith('/') ? base : base + '/';
+}
+
+/** 내부 유틸: 파일명 안전 인코딩 */
+function encodeIfNeeded(name) {
+  try { return encodeURI(name); } catch { return name; }
+}
+
+/** 썸네일/이미지 URL 생성 함수 */
+export function getPaintingThumbUrl(filename) {
+  return __IMG_BASE + encodeIfNeeded(filename);
+}
+
+/** 공통 fetch 옵션 */
+function commonFetchOpts() {
+  return {
+    mode: 'cors',
+    cache: 'no-store',
+    credentials: 'omit',
+    referrerPolicy: 'no-referrer',
+  };
+}
+
+// 1. 외부 서버에서 작품 데이터 fetch (기본 → 옵션 순서)
 export async function fetchPaintingsData() {
-  // [개선] 캐시 버스트 + CORS 모드 명시 + 에러 메시지 강화
-  const metaUrl = _paintingsBase + "metadata.json?v=" + Date.now();
+  const candidates = [PRIMARY_META_URL];
+  if (__ALT_META_URL) candidates.push(__ALT_META_URL);
 
-  let res;
-  try {
-    res = await fetch(metaUrl, { cache: "no-store", mode: "cors" });
-  } catch (e) {
-    throw new Error(`paintings metadata request failed (network/CORS): ${e?.message || e}`);
-  }
+  let lastErr;
+  for (const url of candidates) {
+    try {
+      console.debug('[paintings] fetching:', url);
+      const res = await fetch(url, commonFetchOpts());
+      if (!res.ok) throw new Error(`HTTP ${res.status} (${res.statusText}) from ${new URL(url).host}`);
 
-  if (!res.ok) {
-    throw new Error(`paintings metadata HTTP ${res.status} ${res.statusText}`);
-  }
+      const json = await res.json();
+      if (!Array.isArray(json)) throw new Error('Invalid metadata format (expecting array)');
 
-  try {
-    const json = await res.json();
-    if (!Array.isArray(json)) {
-      throw new Error("metadata is not an array");
+      paintingsData = json;
+      console.info('[paintings] loaded from:', url);
+      return paintingsData;
+    } catch (e) {
+      lastErr = e;
+      console.warn('[paintings] failed:', url, '-', e?.message || e);
+      // 다음 후보로 폴백
     }
-    paintingsData = json;
-    return paintingsData;
-  } catch (e) {
-    throw new Error(`paintings metadata parse failed: ${e?.message || e}`);
   }
+
+  const msg = `paintings metadata request failed (network/CORS): ${lastErr?.message || lastErr}`;
+  console.error(msg);
+  throw new Error(msg);
 }
 
 // 2. 현재 전체 작품 데이터 반환

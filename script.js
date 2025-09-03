@@ -90,6 +90,18 @@ import { setupQuillEditor } from "./src/ui/textEditor.js"
 import { registerGlobalInputBlocker } from './src/ui/globalInputBlocker.js'
 import { markAsColorTexture } from "./src/core/colorManagement.js"
 
+//(선택) 같은 오리진 미러를 폴백으로 쓰고 싶다면 아래 세터들을 import 해서 사용하세요.
+import { setPaintingsMetaAlt, setPaintingsImageBase } from './src/data/painting.js';
+import { setArtwallsMetaAlt, setArtwallImageBase } from './src/data/artwall.js';
+import { setTexturesMetaAlt, setTexturesImageBase } from './src/data/texture.js';
+// // 예: 서버에 /paintings/metadata.json 등을 올려두었다면…
+setPaintingsMetaAlt(`${location.origin}/paintings/metadata.json`);
+setArtwallsMetaAlt(`${location.origin}/artwalls/metadata_artwalls.json`);
+setTexturesMetaAlt(`${location.origin}/textures/metadata_textures.json`);
+setPaintingsImageBase(`${location.origin}/paintings/`);
+setArtwallImageBase(`${location.origin}/artwalls/`);
+setTexturesImageBase(`${location.origin}/textures/`);
+
 let scene, camera, renderer, controls, raycaster, pointer, quill;
 
 let editingButtonsDiv = document.getElementById("paintingEditButtons") // 하단 버튼 컨테이너
