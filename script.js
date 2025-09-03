@@ -1,106 +1,93 @@
-// script.js
 import * as THREE from "three"
-import { createCamera } from "./src/core/camera.js"
+import { createCamera } from "./core/camera.js"
 import {
   PAINTING_Y_OFFSET,
   ROOM_DEPTH,
   ROOM_HEIGHT,
   ROOM_WIDTH
-} from './src/core/constants.js'
-import { createControls } from "./src/core/controls.js"
-import { addDefaultLights } from './src/core/lighting.js'
-import { createRenderer } from "./src/core/renderer.js"
-import { createScene } from "./src/core/scene.js"
-import { createRaycaster } from './src/core/raycaster.js';
-import { createPointer, updatePointer } from './src/core/pointer.js'; // 캔버스 기준 좌표 계산 유틸 포함
+} from './core/constants.js'
+import { createControls } from "./core/controls.js"
+import { addDefaultLights } from './core/lighting.js'
+import { createRenderer } from "./core/renderer.js"
+import { createScene } from "./core/scene.js"
+import { createRaycaster } from './core/raycaster.js';
+import { createPointer, updatePointer } from './core/pointer.js'; // 캔버스 기준 좌표 계산 유틸 포함
 import {
   fetchArtwallsData
-} from './src/data/artwall.js'
+} from './data/artwall.js'
 import {
   fetchPaintingsData
-} from "./src/data/painting.js"
+} from "./data/painting.js"
 import {
   fetchTextureSets, setTexturePage
-} from './src/data/texture.js'
-import { getArtwalls, commitArtwallChanges } from './src/domain/artwall.js'
-import { getArtwallMode } from './src/domain/artwallMode.js'
-import { getSkipCancelBackground } from './src/domain/backgroundState.js'
-import { commitIntroChanges, getTempIntroMeshes } from './src/domain/intro.js'
+} from './data/texture.js'
+import { getArtwalls, commitArtwallChanges } from './domain/artwall.js'
+import { getArtwallMode } from './domain/artwallMode.js'
+import { getSkipCancelBackground } from './domain/backgroundState.js'
+import { commitIntroChanges, getTempIntroMeshes } from './domain/intro.js'
 import {
   commitPaintingChanges,
   getPaintings,
   getSelectedPainting,
   setSelectedPainting,
   getTempPaintings
-} from './src/domain/painting.js'
+} from './domain/painting.js'
 import {
   endEditingPainting,
   getEditingPainting,
   startEditingPainting
-} from './src/domain/paintingEditing.js'
-import { getPaintingMode } from './src/domain/paintingMode.js'
-import { getIntroMode } from "./src/domain/introMode.js"
-import { createRoom } from "./src/domain/room.js"
+} from './domain/paintingEditing.js'
+import { getPaintingMode } from './domain/paintingMode.js'
+import { getIntroMode } from "./domain/introMode.js"
+import { createRoom } from "./domain/room.js"
 import {
   getConfirmedTextureSet,
   setConfirmedTextureSet,
   setSelectedTextureSet
-} from './src/domain/texture.js'
-import { getCurrentWall } from './src/domain/wall.js'
-import { getZoomedInState } from './src/domain/zoomState.js'
-import { handleNavKeyDown } from './src/interaction/navKeyHandler.js'
-import { navigateLeft, navigateRight } from './src/interaction/paintingNavigation.js'
-import { moveCameraToHome, onClick, onDoubleClick } from './src/interaction/zoomControls.js'
-import { populateArtwallGrid, setupArtwallPagination } from "./src/ui/artwallGrid.js"
-import { checkExhibitPeriod } from './src/ui/exhibitionExpired.js'
-import { setupExhibitSettings } from './src/ui/exhibitionPanel.js'
-import { updateGalleryInfo } from "./src/ui/galleryInfo.js"
-import { closeInfo, showInfo, updatePaintingInfo } from './src/ui/infoModal.js'
-import { populateIntroGrid } from "./src/ui/introGrid.js"
-import { populatePaintingGrid, setupPaintingPagination } from "./src/ui/paintingGrid.js"
-import { getIsResizingPainting } from './src/ui/paintingResizeButtons.js'
-import { showPanel, setupPanelAutoClose } from './src/ui/panel.js'
-import { initSocialPanel } from './src/ui/socialPanel.js'
+} from './domain/texture.js'
+import { getCurrentWall } from './domain/wall.js'
+import { getZoomedInState } from './domain/zoomState.js'
+import { handleNavKeyDown } from './interaction/navKeyHandler.js'
+import { navigateLeft, navigateRight } from './interaction/paintingNavigation.js'
+import { moveCameraToHome, onClick, onDoubleClick } from './interaction/zoomControls.js'
+import { populateArtwallGrid, setupArtwallPagination } from "./ui/artwallGrid.js"
+import { checkExhibitPeriod } from './ui/exhibitionExpired.js'
+import { setupExhibitSettings } from './ui/exhibitionPanel.js'
+import { updateGalleryInfo } from "./ui/galleryInfo.js"
+import { closeInfo, showInfo, updatePaintingInfo } from './ui/infoModal.js'
+import { populateIntroGrid } from "./ui/introGrid.js"
+import { populatePaintingGrid, setupPaintingPagination } from "./ui/paintingGrid.js"
+import { getIsResizingPainting } from './ui/paintingResizeButtons.js'
+import { showPanel, setupPanelAutoClose } from './ui/panel.js'
+import { initSocialPanel } from './ui/socialPanel.js'
 import {
   applyPreviewTextureSet,
   onRestoreTextureSet,
   populateTextureGrid,
   setupApplyButton,
   setupTexturePagination
-} from './src/ui/textureGrid.js'
-import { addWallNavListeners, alignToCameraWall } from './src/ui/wallNavigation.js'
+} from './ui/textureGrid.js'
+import { addWallNavListeners, alignToCameraWall } from './ui/wallNavigation.js'
 import {
   startEditingArtwall,
   endEditingArtwall,
   getEditingArtwall
-} from './src/domain/artwallEditing.js'
+} from './domain/artwallEditing.js'
 import {
   onResizeHandlePointerDown,
   onResizeHandlePointerMove,
   onResizeHandlePointerUp,
   getIsResizingWithHandle
-} from './src/interaction/resizeHandles.js'
-import { animate } from './src/core/loop.js'
-import { getCurrentPaintingIndex } from './src/domain/currentPainting.js'
-import { detectWall } from "./src/core/order.js"
-import { registerDropEvents } from './src/ui/dropHandlers.js'
-import { registerPaintingDragHandlers } from './src/interaction/paintingDragHandlers.js';
-import { registerArtwallDragHandlers } from './src/interaction/artwallDragHandlers.js';
-import { setupQuillEditor } from "./src/ui/textEditor.js"
-import { registerGlobalInputBlocker } from './src/ui/globalInputBlocker.js'
-import { markAsColorTexture } from "./src/core/colorManagement.js"
-
-//(선택) 같은 오리진 미러를 폴백으로 쓰고 싶다면 아래 세터들을 import 해서 사용하세요.
-import { setPaintingsMetaAlt, setPaintingsImageBase } from './src/data/painting.js';
-import { setArtwallsMetaAlt, setArtwallImageBase } from './src/data/artwall.js';
-import { setTexturesMetaAlt, setTexturesImageBase } from './src/data/texture.js';
-// // 예: 서버에 /paintings/metadata.json 등을 올려두었다면…
-setPaintingsMetaAlt(`${location.origin}/paintings/metadata.json`);
-setArtwallsMetaAlt(`${location.origin}/artwalls/metadata_artwalls.json`);
-setTexturesMetaAlt(`${location.origin}/textures/metadata_textures.json`);
-setPaintingsImageBase(`${location.origin}/paintings/`);
-setArtwallImageBase(`${location.origin}/artwalls/`);
-setTexturesImageBase(`${location.origin}/textures/`);
+} from './interaction/resizeHandles.js'
+import { animate } from './core/loop.js'
+import { getCurrentPaintingIndex } from './domain/currentPainting.js'
+import { detectWall } from "./core/order.js"
+import { registerDropEvents } from './ui/dropHandlers.js'
+import { registerPaintingDragHandlers } from './interaction/paintingDragHandlers.js';
+import { registerArtwallDragHandlers } from './interaction/artwallDragHandlers.js';
+import { setupQuillEditor } from "./ui/textEditor.js"
+import { registerGlobalInputBlocker } from './ui/globalInputBlocker.js'
+import { markAsColorTexture } from "./core/colorManagement.js"
 
 let scene, camera, renderer, controls, raycaster, pointer, quill;
 
@@ -140,64 +127,10 @@ if (THREE.ColorManagement && 'enabled' in THREE.ColorManagement) {
   THREE.ColorManagement.enabled = true;
 }
 
-/* ─────────────────────────────────────────────────────────
- * Touch → Pointer 브리지
- *  - 모바일에서 touchstart/move/end를 PointerEvent로 변환
- *  - 기본 제스처(스크롤/핀치줌)를 차단하여 Canvas 제스처 우선권 보장
- * ───────────────────────────────────────────────────────── */
-function bridgeTouchToPointer(canvas) {
-  // (보너스) 혹시 CSS에서 누락됐을 경우 대비
-  canvas.style.touchAction = 'none';
-
-  function fire(type, t) {
-    const init = {
-      bubbles: true,
-      cancelable: true,
-      clientX: t.clientX,
-      clientY: t.clientY,
-      screenX: t.screenX,
-      screenY: t.screenY,
-      pageX:   t.pageX,
-      pageY:   t.pageY,
-      pointerId: t.identifier ?? 1,
-      pointerType: 'touch',
-      button: 0,
-      buttons: 1,
-    };
-    try {
-      canvas.dispatchEvent(new PointerEvent(type, init));
-    } catch {
-      const pe = new Event(type, { bubbles: true, cancelable: true });
-      Object.assign(pe, init);
-      canvas.dispatchEvent(pe);
-    }
-  }
-
-  canvas.addEventListener('touchstart', (e) => {
-    if (e.cancelable) e.preventDefault();
-    for (const t of e.changedTouches) fire('pointerdown', t);
-  }, { passive: false });
-
-  canvas.addEventListener('touchmove', (e) => {
-    if (e.cancelable) e.preventDefault();
-    for (const t of e.changedTouches) fire('pointermove', t);
-  }, { passive: false });
-
-  canvas.addEventListener('touchend', (e) => {
-    if (e.cancelable) e.preventDefault();
-    for (const t of e.changedTouches) fire('pointerup', t);
-  }, { passive: false });
-
-  canvas.addEventListener('touchcancel', (e) => {
-    for (const t of e.changedTouches) fire('pointercancel', t);
-  });
-}
-
 async function init() {
   scene = createScene();
   camera = createCamera();
   renderer = createRenderer(onWindowResize);
-  window.__galleryCanvas = renderer.domElement;
   raycaster = createRaycaster();
   pointer = createPointer();
   controls = createControls(camera, renderer.domElement, {
@@ -212,13 +145,10 @@ async function init() {
 
   addDefaultLights(scene)
 
-  // ★ Touch → Pointer 브리지 활성화 (모든 포인터 기반 핸들러 이전에)
-  bridgeTouchToPointer(renderer.domElement);
-
   // 드래그앤드롭 이벤트 등록
   registerDropEvents(renderer.domElement, {
-    scene, renderer, camera, raycaster, textureLoader,
-    getTempPaintings, getPaintings, getTempIntroMeshes, getIntroMode
+  scene, renderer, camera, raycaster, textureLoader,
+  getTempPaintings, getPaintings, getTempIntroMeshes, getIntroMode
   });
 
   const start = Date.now()
@@ -249,13 +179,13 @@ async function init() {
     if (isVisible) {
       closeInfo()
     } else {
-      const sel = getSelectedPainting()
-      if (sel && sel.userData && sel.userData.data) {
-        showInfo(sel.userData.data, sel) // <- data, mesh를 반드시 넘긴다
-      } else {
-        console.warn("선택된 작품이 없습니다")
-      }
+    const sel = getSelectedPainting()
+    if (sel && sel.userData && sel.userData.data) {
+      showInfo(sel.userData.data, sel) // <- data, mesh를 반드시 넘긴다
+    } else {
+      console.warn("선택된 작품이 없습니다")
     }
+  }
     /* 작품선택 모드일 때만 상세 정보 덮어쓰기 */
     const sel = getSelectedPainting()
     if (getPaintingMode() && sel) {
@@ -271,11 +201,10 @@ async function init() {
   }, { passive: true })
   
   renderer.domElement.addEventListener("dblclick", (e) => {
-    // 🔧 fix: 시그니처 변경(onDoubleClick(..., scene, renderer?))에 맞춰 인자 정렬
-    onDoubleClick(e, camera, controls, raycaster, pointer, scene, renderer)
+    onDoubleClick(e, camera, controls, raycaster, pointer, getPaintings(), scene)
   })
 
-  // 마우스/터치 드래그로 그림 위치 이동
+  // 마우스 드래그로 그림 위치 이동
   registerPaintingDragHandlers(renderer.domElement, {
     getIsResizingWithHandle,
     getIsResizingPainting,
@@ -315,11 +244,22 @@ async function init() {
     editingButtonsDiv
   })
 
-  // ❌ (제거) 이전 touchend → onClick 직통 리스너
-  //  - 이제 bridgeTouchToPointer + 아래 '탭 셔틀'이 대응하므로 필요 없음
-  // renderer.domElement.addEventListener("touchend", ...)
+  renderer.domElement.addEventListener(
+    "touchend",
+    (event) => {
+      if (event.touches && event.touches.length > 1) return // 멀티터치는 무시
 
-  // 편집 버튼 외부 클릭 시 편집 종료
+      if (event.cancelable) event.preventDefault() // cancelable 체크 추가
+      // 터치 위치 → pointer 위치로 변환
+      const touch = event.changedTouches[0]
+      const rect = renderer.domElement.getBoundingClientRect()
+      pointer.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1
+      pointer.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1
+      onClick(event, camera, controls, raycaster, pointer, getPaintings())
+    },
+    { passive: false },
+  )
+
   document.addEventListener("mousedown", function (e) {
     if (getIsResizingWithHandle() || getIsResizingPainting()) return;
     // 편집버튼만 예외, 그 외 나머지 클릭 시 무조건 편집 종료
@@ -328,35 +268,6 @@ async function init() {
   })
 
   renderer.domElement.addEventListener("mousemove", onPointerMove)
-
-  // ─────────────────────────────────────────────────────────
-  // 터치 탭 → onClick 셔틀
-  //  - 드래그가 아닌 짧은 터치만 클릭으로 간주하여 onClick 호출
-  //  - 포인터 기반이라 마우스에는 영향 없음
-  // ─────────────────────────────────────────────────────────
-  const TAP_DIST = 10;   // px
-  const TAP_TIME = 250;  // ms
-  let tapStart = null;
-
-  renderer.domElement.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'touch') {
-      tapStart = { x: e.clientX, y: e.clientY, t: performance.now() };
-    }
-  }, { passive: true });
-
-  renderer.domElement.addEventListener('pointerup', (e) => {
-    if (e.pointerType === 'touch' && tapStart) {
-      const dx = e.clientX - tapStart.x;
-      const dy = e.clientY - tapStart.y;
-      const dt = performance.now() - tapStart.t;
-      const isTap = (dx*dx + dy*dy) <= (TAP_DIST*TAP_DIST) && dt <= TAP_TIME;
-
-      if (isTap) {
-        onClick(e, camera, controls, raycaster, pointer, getPaintings(), scene, renderer);
-      }
-      tapStart = null;
-    }
-  }, { passive: true });
 
   animate(scene, camera, renderer, controls, raycaster, pointer)
 }
@@ -447,7 +358,9 @@ function showInstructions() {
   document.getElementById("instructionOverlay").style.display = "flex"
 }
 
-document.getElementById("instructionOverlay").addEventListener("click", hideInstructions)
+document.getElementById("instructionOverlay").addEventListener("click", () => {
+  document.getElementById("instructionOverlay").style.display = "none"
+})
 
 async function initApp() {
   // 먼저 저장된 texture set을 미리 기억해둠
@@ -498,7 +411,7 @@ async function initApp() {
     // 패널 외부 클릭 시 닫기 기능 초기화
     setupPanelAutoClose();
 
-    // 전역 입력 차단기 등록
+     // 전역 입력 차단기 등록
     registerGlobalInputBlocker();
 
     // 핸들러 드래그 이벤트 바인딩
@@ -576,6 +489,7 @@ navToggleBtn.addEventListener("click", () => {
 function isNavButtonsHidden() {
   return navButtons?.classList.contains("slide-down");
 }
+
 
 // 키보드 대응
 document.addEventListener("keydown", handleNavKeyDown)
