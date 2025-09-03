@@ -492,4 +492,36 @@ export function registerPaintingDragHandlers(domElement, {
 
     try { domElement.releasePointerCapture?.(e.pointerId); } catch (_) {}
   }, { passive:true });
+
+  // ...registerPaintingDragHandlers 내부, 기존 리스너들 아래에 추가
+
+  // pointerleave: 캔버스를 벗어나 손을 떼는 안드/삼성인터넷 케이스 보완
+  domElement.addEventListener("pointerleave", (e) => {
+    if (!isDragging) return;
+
+    // 마지막 좌표로 드롭 한 번 더 스냅 (getSafeClientXY는 이미 위에 정의됨)
+    const sel = getSelectedPainting?.();
+    if (sel) {
+      const client = getSafeClientXY(e);
+      finalizeDropAtClientXY(client, {
+        domElement,
+        camera, raycaster, scene,
+        getCurrentWall,
+        ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH
+      }, sel);
+
+      // 작품설정 모드면 정렬 동기화(PC와 동일한 타이밍 맞춤)
+      if (getPaintingMode?.()) updatePaintingOrderByPosition();
+    }
+
+    // 리셋 (pointercancel과 동일)
+    dragStartScreen = null;
+    pointerDownTime = 0;
+    isDragging = false;
+    setSelectedPainting?.(null);
+    hasDragTarget = false;
+    edgeNav.onDragEnd();
+    restoreControls();
+    try { domElement.releasePointerCapture?.(e.pointerId); } catch(_) {}
+  }, { passive:true });
 }
