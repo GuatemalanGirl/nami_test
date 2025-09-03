@@ -128,6 +128,59 @@ if (THREE.ColorManagement && 'enabled' in THREE.ColorManagement) {
   THREE.ColorManagement.enabled = true;
 }
 
+/* ─────────────────────────────────────────────────────────
+ * Touch → Pointer 브리지
+ *  - 모바일에서 touchstart/move/end를 PointerEvent로 변환
+ *  - 기본 제스처(스크롤/핀치줌)를 차단하여 Canvas 제스처 우선권 보장
+ * ───────────────────────────────────────────────────────── */
+function bridgeTouchToPointer(canvas) {
+  // (보너스) 혹시 CSS에서 누락됐을 경우 대비
+  canvas.style.touchAction = 'none';
+
+  function fire(type, t) {
+    const init = {
+      bubbles: true,
+      cancelable: true,
+      clientX: t.clientX,
+      clientY: t.clientY,
+      screenX: t.screenX,
+      screenY: t.screenY,
+      pageX:   t.pageX,
+      pageY:   t.pageY,
+      pointerId: t.identifier ?? 1,
+      pointerType: 'touch',
+      button: 0,
+      buttons: 1,
+    };
+    try {
+      canvas.dispatchEvent(new PointerEvent(type, init));
+    } catch {
+      const pe = new Event(type, { bubbles: true, cancelable: true });
+      Object.assign(pe, init);
+      canvas.dispatchEvent(pe);
+    }
+  }
+
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.cancelable) e.preventDefault();
+    for (const t of e.changedTouches) fire('pointerdown', t);
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (e.cancelable) e.preventDefault();
+    for (const t of e.changedTouches) fire('pointermove', t);
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', (e) => {
+    if (e.cancelable) e.preventDefault();
+    for (const t of e.changedTouches) fire('pointerup', t);
+  }, { passive: false });
+
+  canvas.addEventListener('touchcancel', (e) => {
+    for (const t of e.changedTouches) fire('pointercancel', t);
+  });
+}
+
 async function init() {
   scene = createScene();
   camera = createCamera();
@@ -145,6 +198,9 @@ async function init() {
   quill = setupQuillEditor('#quillEditor');
 
   addDefaultLights(scene)
+
+  // ★ Touch → Pointer 브리지 활성화 (모든 포인터 기반 핸들러 이전에)
+  bridgeTouchToPointer(renderer.domElement);
 
   // 드래그앤드롭 이벤트 등록
   registerDropEvents(renderer.domElement, {
@@ -206,7 +262,7 @@ async function init() {
     onDoubleClick(e, camera, controls, raycaster, pointer, scene, renderer)
   })
 
-  // 마우스 드래그로 그림 위치 이동
+  // 마우스/터치 드래그로 그림 위치 이동
   registerPaintingDragHandlers(renderer.domElement, {
     getIsResizingWithHandle,
     getIsResizingPainting,
@@ -246,24 +302,11 @@ async function init() {
     editingButtonsDiv
   })
 
-  renderer.domElement.addEventListener(
-    "touchend",
-    (event) => {
-      if (event.touches && event.touches.length > 1) return // 멀티터치는 무시
-      if (event.cancelable) event.preventDefault() // cancelable 체크 추가
+  // ❌ (제거) 이전 touchend → onClick 직통 리스너
+  //  - 이제 bridgeTouchToPointer + 아래 '탭 셔틀'이 대응하므로 필요 없음
+  // renderer.domElement.addEventListener("touchend", ...)
 
-      // 터치 위치 → pointer 위치로 변환
-      const touch = event.changedTouches[0]
-      const rect = renderer.domElement.getBoundingClientRect()
-      pointer.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1
-      pointer.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1
-
-      // 🔧 fix: onClick 호출 시 scene/renderer 전달
-      onClick(event, camera, controls, raycaster, pointer, getPaintings(), scene, renderer)
-    },
-    { passive: false },
-  )
-
+  // 편집 버튼 외부 클릭 시 편집 종료
   document.addEventListener("mousedown", function (e) {
     if (getIsResizingWithHandle() || getIsResizingPainting()) return;
     // 편집버튼만 예외, 그 외 나머지 클릭 시 무조건 편집 종료
@@ -272,6 +315,35 @@ async function init() {
   })
 
   renderer.domElement.addEventListener("mousemove", onPointerMove)
+
+  // ─────────────────────────────────────────────────────────
+  // 터치 탭 → onClick 셔틀
+  //  - 드래그가 아닌 짧은 터치만 클릭으로 간주하여 onClick 호출
+  //  - 포인터 기반이라 마우스에는 영향 없음
+  // ─────────────────────────────────────────────────────────
+  const TAP_DIST = 10;   // px
+  const TAP_TIME = 250;  // ms
+  let tapStart = null;
+
+  renderer.domElement.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') {
+      tapStart = { x: e.clientX, y: e.clientY, t: performance.now() };
+    }
+  }, { passive: true });
+
+  renderer.domElement.addEventListener('pointerup', (e) => {
+    if (e.pointerType === 'touch' && tapStart) {
+      const dx = e.clientX - tapStart.x;
+      const dy = e.clientY - tapStart.y;
+      const dt = performance.now() - tapStart.t;
+      const isTap = (dx*dx + dy*dy) <= (TAP_DIST*TAP_DIST) && dt <= TAP_TIME;
+
+      if (isTap) {
+        onClick(e, camera, controls, raycaster, pointer, getPaintings(), scene, renderer);
+      }
+      tapStart = null;
+    }
+  }, { passive: true });
 
   animate(scene, camera, renderer, controls, raycaster, pointer)
 }
@@ -491,7 +563,6 @@ navToggleBtn.addEventListener("click", () => {
 function isNavButtonsHidden() {
   return navButtons?.classList.contains("slide-down");
 }
-
 
 // 키보드 대응
 document.addEventListener("keydown", handleNavKeyDown)
