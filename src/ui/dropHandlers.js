@@ -71,7 +71,7 @@ export function handleArtwallDrop(rawData, scene, textureLoader) {
  * @param {THREE.Raycaster} raycaster
  * @param {Array} tempPaintings
  * @param {THREE.TextureLoader} textureLoader
- * @param {DragEvent} event
+ * @param {DragEvent|PointerEvent|{clientX:number,clientY:number,target:Element}} event
  */
 export function handlePaintingDrop(rawData, scene, renderer, camera, raycaster, tempPaintings, textureLoader, event) {
   let paintingData
@@ -153,7 +153,7 @@ export function handlePaintingDrop(rawData, scene, renderer, camera, raycaster, 
  * @param {Array<THREE.Object3D>} paintings
  * @param {Array<THREE.Object3D>} tempIntroMeshes
  * @param {boolean} isIntroMode
- * @param {DragEvent} event
+ * @param {DragEvent|PointerEvent|{clientX:number,clientY:number,target:Element}} event
  */
 export function handleIntroDrop(type, scene, renderer, camera, raycaster, paintings, tempIntroMeshes, isIntroMode, event) {
   // ★ 캔버스 기준 NDC 좌표 일관 처리
@@ -270,4 +270,35 @@ export function registerDropEvents(domElement, {
       return
     }
   })
+
+  // ─────────────────────────────────────────────────────────────
+  // ★★★★★ 터치 폴백 DnD 수신기
+  // - 그리드 썸네일에서 pointer 기반으로 보낸 'touchdrop' 커스텀 이벤트를 수신
+  // - 안드로이드/일부 모바일 브라우저에서 HTML5 DnD 미동작 시 사용
+  window.addEventListener('touchdrop', (ev) => {
+    const d = ev?.detail || {}
+    const { kind, payload, clientX, clientY } = d
+    if (!kind || !payload) return
+
+    // updatePointer가 참조할 타겟을 캔버스로 지정한 합성 이벤트
+    const synthetic = { clientX, clientY, target: renderer.domElement }
+
+    if (kind === 'painting') {
+      handlePaintingDrop(
+        JSON.stringify(payload),
+        scene, renderer, camera, raycaster,
+        getTempPaintings(), textureLoader, synthetic
+      )
+    } else if (kind === 'artwall') {
+      handleArtwallDrop(JSON.stringify(payload), scene, textureLoader)
+    } else if (kind === 'intro') {
+      // payload: { type: 'frame'|'plane'|'poster' }
+      handleIntroDrop(
+        payload.type,
+        scene, renderer, camera, raycaster,
+        getPaintings(), getTempIntroMeshes(), getIntroMode(),
+        synthetic
+      )
+    }
+  }, { passive: true })
 }

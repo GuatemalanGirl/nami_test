@@ -57,13 +57,11 @@ export function populateIntroGrid() {
       } catch (_) { /* 구형/제한 환경 무시 */ }
 
       box.classList.add('dragging');
-      box.setAttribute('aria-grabbed', 'true');
     });
 
     // 드래그 종료/드롭: 시각 상태 정리
     const cleanup = () => {
       box.classList.remove('dragging');
-      box.removeAttribute('aria-grabbed');
     };
     box.addEventListener('dragend', cleanup);
     box.addEventListener('drop', cleanup);
@@ -84,10 +82,93 @@ export function populateIntroGrid() {
       }
     });
 
+    // ★★★ Android 등 터치 환경 폴백 DnD 활성화 (pointer 기반 커스텀 드래그)
+    enableTouchDragSource(box, 'intro', { type }, { ghostSize: 80 });
+
     grid.appendChild(box);
   });
 }
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/* ─────────────────────────────────────────────────────────
+ * ★ 터치 전용 폴백 DnD (pointer 기반)
+ * - Android Chrome 등에서 HTML5 DnD가 동작하지 않는 경우를 대비
+ * - 드래그 시작 임계(TH) 초과 시 고스트를 띄우고, 손을 떼는 위치로
+ *   window에 'touchdrop' 커스텀 이벤트를 발행 → dropHandlers가 수신
+ * ───────────────────────────────────────────────────────── */
+function enableTouchDragSource(el, kind, payload, { ghostSize = 64 } = {}) {
+  let dragging = false, started = false, sx = 0, sy = 0, ghost = null;
+  const TH = 6;
+
+  const makeGhost = () => {
+    const g = document.createElement('div');
+    Object.assign(g.style, {
+      position: 'fixed',
+      left: '0',
+      top: '0',
+      width: `${ghostSize}px`,
+      height: `${ghostSize}px`,
+      borderRadius: '10px',
+      boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+      pointerEvents: 'none',
+      zIndex: 999999,
+      opacity: '0.9',
+      background: getComputedStyle(el).background || 'rgba(255,255,255,0.9)',
+      color: '#000',
+      display: 'grid',
+      placeItems: 'center',
+      fontSize: '11px',
+      padding: '6px',
+      textAlign: 'center',
+      transform: 'translate(-50%, -50%)',
+      willChange: 'transform'
+    });
+    g.textContent = (el.textContent || '').replace(/\s+/g, ' ').trim();
+    document.body.appendChild(g);
+    return g;
+  };
+
+  const onDown = (e) => {
+    if (e.pointerType === 'mouse') return; // 마우스는 네이티브 DnD 사용
+    dragging = true;
+    started = false;
+    sx = e.clientX; sy = e.clientY;
+    el.setPointerCapture?.(e.pointerId);
+  };
+
+  const onMove = (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (!started && Math.hypot(dx, dy) > TH) {
+      started = true;
+      ghost = makeGhost();
+      el.classList.add('dragging');
+    }
+    if (started && ghost) {
+      if (e.cancelable) e.preventDefault(); // 스크롤 억제
+      ghost.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    }
+  };
+
+  const finish = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    el.releasePointerCapture?.(e.pointerId);
+    if (ghost) { ghost.remove(); ghost = null; }
+    if (started) {
+      window.dispatchEvent(new CustomEvent('touchdrop', {
+        detail: { kind, payload, clientX: e.clientX, clientY: e.clientY },
+        bubbles: true,
+      }));
+    }
+    el.classList.remove('dragging');
+  };
+
+  el.addEventListener('pointerdown', onDown, { passive: true });
+  el.addEventListener('pointermove', onMove, { passive: false });
+  el.addEventListener('pointerup', finish, { passive: true });
+  el.addEventListener('pointercancel', finish, { passive: true });
 }
