@@ -39,7 +39,8 @@ function matchPaintingRecord(key, rec) {
 // === mesh에서 식별자 뽑기(우선순위: id -> filename -> name -> title -> uuid)
 function extractKeyFromMesh(mesh) {
   const ud = mesh?.userData || {}
-  return ud.id || ud.filename || mesh?.name || ud.title || ud.uuid || null
+  // 🔧 fix: 마지막 폴백을 ud.uuid → mesh?.uuid 로 수정
+  return ud.id || ud.filename || mesh?.name || ud.title || mesh?.uuid || null
 }
 
 // === 모달 상태 헬퍼

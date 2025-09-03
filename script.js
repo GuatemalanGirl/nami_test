@@ -1,3 +1,4 @@
+// script.js
 import * as THREE from "three"
 import { createCamera } from "./src/core/camera.js"
 import {
@@ -147,8 +148,8 @@ async function init() {
 
   // 드래그앤드롭 이벤트 등록
   registerDropEvents(renderer.domElement, {
-  scene, renderer, camera, raycaster, textureLoader,
-  getTempPaintings, getPaintings, getTempIntroMeshes, getIntroMode
+    scene, renderer, camera, raycaster, textureLoader,
+    getTempPaintings, getPaintings, getTempIntroMeshes, getIntroMode
   });
 
   const start = Date.now()
@@ -179,13 +180,13 @@ async function init() {
     if (isVisible) {
       closeInfo()
     } else {
-    const sel = getSelectedPainting()
-    if (sel && sel.userData && sel.userData.data) {
-      showInfo(sel.userData.data, sel) // <- data, mesh를 반드시 넘긴다
-    } else {
-      console.warn("선택된 작품이 없습니다")
+      const sel = getSelectedPainting()
+      if (sel && sel.userData && sel.userData.data) {
+        showInfo(sel.userData.data, sel) // <- data, mesh를 반드시 넘긴다
+      } else {
+        console.warn("선택된 작품이 없습니다")
+      }
     }
-  }
     /* 작품선택 모드일 때만 상세 정보 덮어쓰기 */
     const sel = getSelectedPainting()
     if (getPaintingMode() && sel) {
@@ -201,7 +202,8 @@ async function init() {
   }, { passive: true })
   
   renderer.domElement.addEventListener("dblclick", (e) => {
-    onDoubleClick(e, camera, controls, raycaster, pointer, getPaintings(), scene)
+    // 🔧 fix: 시그니처 변경(onDoubleClick(..., scene, renderer?))에 맞춰 인자 정렬
+    onDoubleClick(e, camera, controls, raycaster, pointer, scene, renderer)
   })
 
   // 마우스 드래그로 그림 위치 이동
@@ -248,14 +250,16 @@ async function init() {
     "touchend",
     (event) => {
       if (event.touches && event.touches.length > 1) return // 멀티터치는 무시
-
       if (event.cancelable) event.preventDefault() // cancelable 체크 추가
+
       // 터치 위치 → pointer 위치로 변환
       const touch = event.changedTouches[0]
       const rect = renderer.domElement.getBoundingClientRect()
       pointer.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1
       pointer.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1
-      onClick(event, camera, controls, raycaster, pointer, getPaintings())
+
+      // 🔧 fix: onClick 호출 시 scene/renderer 전달
+      onClick(event, camera, controls, raycaster, pointer, getPaintings(), scene, renderer)
     },
     { passive: false },
   )
@@ -358,9 +362,7 @@ function showInstructions() {
   document.getElementById("instructionOverlay").style.display = "flex"
 }
 
-document.getElementById("instructionOverlay").addEventListener("click", () => {
-  document.getElementById("instructionOverlay").style.display = "none"
-})
+document.getElementById("instructionOverlay").addEventListener("click", hideInstructions)
 
 async function initApp() {
   // 먼저 저장된 texture set을 미리 기억해둠
@@ -411,7 +413,7 @@ async function initApp() {
     // 패널 외부 클릭 시 닫기 기능 초기화
     setupPanelAutoClose();
 
-     // 전역 입력 차단기 등록
+    // 전역 입력 차단기 등록
     registerGlobalInputBlocker();
 
     // 핸들러 드래그 이벤트 바인딩

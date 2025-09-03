@@ -202,6 +202,56 @@ export function registerPaintingDragHandlers(domElement, {
   }
   // ─────────────────────────────────────────────────────────────
 
+  // ─────────────────────────────────────────────────────────────
+  // 🔧 안드 전용 안전망: 글로벌 업/캔슬 핸들러 (canvas 밖에서 손 뗀 경우 대비)
+  let removeGlobalUp = null;
+  function attachGlobalUp() {
+    if (removeGlobalUp) return;
+
+    const handler = (e) => {
+      // 캔버스에 pointerup이 안 왔을 때를 위한 안전망
+      if (!anyModeActive() || !dragStartScreen) return;
+      if (multiTouch) return;
+
+      const sel = getSelectedPainting?.();
+      if (sel) {
+        const client = getSafeClientXY(e);
+        finalizeDropAtClientXY(client, {
+          domElement,
+          camera, raycaster, scene,
+          getCurrentWall,
+          ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH
+        }, sel);
+        if (getPaintingMode?.()) updatePaintingOrderByPosition();
+      }
+
+      // 공통 리셋
+      dragStartScreen = null;
+      pointerDownTime = 0;
+      isDragging = false;
+      setSelectedPainting?.(null);
+      hasDragTarget = false;
+      edgeNav.onDragEnd();
+      restoreControls();
+
+      try { domElement.releasePointerCapture?.(e.pointerId); } catch (_) {}
+
+      // 한 번 처리했으면 리스너 해제
+      if (removeGlobalUp) removeGlobalUp();
+    };
+
+    // capture:true 로 최우선 가로채기
+    window.addEventListener('pointerup', handler, true);
+    window.addEventListener('pointercancel', handler, true);
+
+    removeGlobalUp = () => {
+      window.removeEventListener('pointerup', handler, true);
+      window.removeEventListener('pointercancel', handler, true);
+      removeGlobalUp = null;
+    };
+  }
+  // ─────────────────────────────────────────────────────────────
+
   // -----------------------------
   // 마우스/터치 드래그로 그림 위치 이동
   // -----------------------------
@@ -257,6 +307,35 @@ export function registerPaintingDragHandlers(domElement, {
     edgeNav.onDragStart();
 
     try { domElement.setPointerCapture?.(e.pointerId); } catch (_) {}
+
+    // lostpointercapture: 캡처가 중간에 끊긴 경우 마지막 좌표로 스냅
+    const onLost = (ev) => {
+      if (!isDragging) return;
+
+      const sel = getSelectedPainting?.();
+      if (sel) {
+        const client = getSafeClientXY(ev);
+        finalizeDropAtClientXY(client, {
+          domElement,
+          camera, raycaster, scene,
+          getCurrentWall,
+          ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH
+        }, sel);
+        if (getPaintingMode?.()) updatePaintingOrderByPosition();
+      }
+
+      // 공통 리셋
+      dragStartScreen = null;
+      pointerDownTime = 0;
+      isDragging = false;
+      setSelectedPainting?.(null);
+      hasDragTarget = false;
+      edgeNav.onDragEnd();
+      restoreControls();
+      if (removeGlobalUp) removeGlobalUp();
+    };
+    // 한 포인터 사이클에 한 번만
+    domElement.addEventListener('lostpointercapture', onLost, { once: true });
   }, { passive:false }); // 터치 제스처 제어를 위해 passive:false
 
   domElement.addEventListener("pointerup", (e) => {
@@ -289,6 +368,7 @@ export function registerPaintingDragHandlers(domElement, {
       hasDragTarget = false; 
       edgeNav.onDragEnd();
       restoreControls(); // 드래그 전 상태로 복귀
+      if (removeGlobalUp) removeGlobalUp();
       try { domElement.releasePointerCapture?.(e.pointerId); } catch (_) {}
       return;
     }
@@ -343,6 +423,7 @@ export function registerPaintingDragHandlers(domElement, {
     hasDragTarget = false;
     edgeNav.onDragEnd();
     restoreControls(); // 드래그 전 상태로 복귀
+    if (removeGlobalUp) removeGlobalUp();
 
     try { domElement.releasePointerCapture?.(e.pointerId); } catch (_) {}
   }, { passive:true });
@@ -369,6 +450,9 @@ export function registerPaintingDragHandlers(domElement, {
       if (!hasDragTarget) return; // 타깃 없으면 드래그 시작 안 함
       isDragging = true;
       lockControls(); // 드래그 중 OrbitControls 비활성화 (종료 시 원상복구)
+
+      // 🔧 드래그가 실제 시작되는 시점에 글로벌 업 핸들러 부착
+      attachGlobalUp();
 
       if (getPaintingMode?.()) {
         if (getEditingPainting?.()) {
@@ -489,11 +573,10 @@ export function registerPaintingDragHandlers(domElement, {
     hasDragTarget = false; 
     edgeNav.onDragEnd();
     restoreControls(); // 드래그 전 상태로 복귀
+    if (removeGlobalUp) removeGlobalUp();
 
     try { domElement.releasePointerCapture?.(e.pointerId); } catch (_) {}
   }, { passive:true });
-
-  // ...registerPaintingDragHandlers 내부, 기존 리스너들 아래에 추가
 
   // pointerleave: 캔버스를 벗어나 손을 떼는 안드/삼성인터넷 케이스 보완
   domElement.addEventListener("pointerleave", (e) => {
@@ -522,6 +605,7 @@ export function registerPaintingDragHandlers(domElement, {
     hasDragTarget = false;
     edgeNav.onDragEnd();
     restoreControls();
+    if (removeGlobalUp) removeGlobalUp();
     try { domElement.releasePointerCapture?.(e.pointerId); } catch(_) {}
   }, { passive:true });
 }
