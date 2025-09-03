@@ -56,7 +56,7 @@ export function registerPaintingDragHandlers(domElement, {
   let primaryPointerId = null;
   let multiTouch = false;
 
-  // 안드로이드(Samsung Internet 등) pointerup 좌표 폴백용
+  // ★ 안드로이드(Samsung Internet/Chrome) pointerup 좌표 폴백용
   let lastClientPos = { x: 0, y: 0 };
   function getSafeClientXY(e) {
     let x = e?.clientX, y = e?.clientY;
@@ -128,9 +128,10 @@ export function registerPaintingDragHandlers(domElement, {
   });
 
   // ─────────────────────────────────────────────────────────────
-  // 드롭 순간(또는 cancel)에도 정확히 벽에 스냅되게 하는 유틸
-  //  - 현재 벽 히트 실패 시, 4면 전체에서 첫 히트를 검색
-  //  - 경계 클램프 + 노멀 정렬까지 한 번 더 보장
+  // 드롭/취소 시, 히트 지점으로 스냅 + 경계 클램프 + 노멀 정렬
+  //  - 현재 벽 히트 실패 시 4면 전체 검색
+  //  - hit.object가 벽의 자식일 수 있으므로 최상위 벽 그룹을 parent 체인에서 탐색
+  //  - 못 찾으면 노멀(|nx| vs |nz|)로 벽을 추정
   function finalizeDropAtClientXY(clientXY, {
     domElement, camera, raycaster, scene,
     getCurrentWall, ROOM_WIDTH, ROOM_HEIGHT, ROOM_DEPTH
@@ -144,11 +145,9 @@ export function registerPaintingDragHandlers(domElement, {
     );
     raycaster.setFromCamera(mouse, camera);
 
-    // 1) 우선 현재 벽
-    const curr = scene.getObjectByName(getCurrentWall());
-    let hit = curr ? raycaster.intersectObject(curr, true)[0] : null;
-
-    // 2) 실패 시 4면 모두 검사(옆 벽으로 넘긴 경우)
+    // 1) 현재 벽 우선, 안 맞으면 4면 전체 검사
+    const currRoot = scene.getObjectByName(getCurrentWall());
+    let hit = currRoot ? raycaster.intersectObject(currRoot, true)[0] : null;
     if (!hit) {
       const walls = ['front','back','left','right']
         .map(n => scene.getObjectByName(n))
@@ -157,19 +156,30 @@ export function registerPaintingDragHandlers(domElement, {
     }
     if (!hit) return;
 
-    const wallMesh = hit.object;
-    const point = hit.point.clone();
-    const normal = hit.face.normal.clone().transformDirection(wallMesh.matrixWorld);
-    point.add(normal.multiplyScalar(0.05)); // 벽에서 살짝 띄우기
+    // 2) 최상위 벽 그룹을 찾아 이름 확정 (front/back/left/right)
+    const WALL_NAMES = new Set(['front','back','left','right']);
+    let root = hit.object;
+    while (root && !WALL_NAMES.has(root.name)) root = root.parent;
+    let wallName = root?.name || null;
 
-    // 경계 클램프
+    // 2-1) 그래도 못 찾으면 노멀로 추정(|nx| vs |nz|)
+    const normalW = hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
+    if (!wallName) {
+      const ax = Math.abs(normalW.x), az = Math.abs(normalW.z);
+      if (az >= ax) wallName = (normalW.z > 0) ? 'front' : 'back';
+      else          wallName = (normalW.x > 0) ? 'right' : 'left';
+    }
+
+    // 3) 표면으로 약간 띄우기
+    const point = hit.point.clone().add(normalW.clone().multiplyScalar(0.05));
+
+    // 4) 경계 클램프
     const box = new THREE.Box3().setFromObject(sel);
     const size = new THREE.Vector3(); box.getSize(size);
     const halfW = ROOM_WIDTH/2, halfH = ROOM_HEIGHT/2, halfD = ROOM_DEPTH/2;
     const hw = size.x/2, hh = size.y/2, hd = size.z/2;
 
-    const name = wallMesh.name; // 'front'|'back'|'left'|'right'
-    switch (name) {
+    switch (wallName) {
       case 'front':
       case 'back':
         point.x = THREE.MathUtils.clamp(point.x, -halfW+hw,  halfW-hw);
@@ -182,14 +192,13 @@ export function registerPaintingDragHandlers(domElement, {
         break;
     }
 
+    // 5) 최종 적용 + 회전(노멀 정렬)
     sel.position.copy(point);
-
-    // 회전(노멀 정렬)
-    const q = new THREE.Quaternion().setFromUnitVectors(forward, normal.clone().normalize());
+    const q = new THREE.Quaternion().setFromUnitVectors(forward, normalW.clone().normalize());
     sel.quaternion.slerp(q, 0.35);
 
-    // 선택: 소속 벽 메타 갱신(좌표 기반 detectWall을 쓴다면 없어도 무방)
-    sel.userData.wall = name;
+    // 6) 메타 갱신(선택)
+    sel.userData.wall = wallName;
   }
   // ─────────────────────────────────────────────────────────────
 
@@ -384,12 +393,14 @@ export function registerPaintingDragHandlers(domElement, {
         const currentWall = getCurrentWall();
         const wallMesh = scene.getObjectByName(currentWall);
         if (wallMesh) {
-          const intersects = raycaster.intersectObject(wallMesh);
+          // ▼ 자식 메쉬까지 포함해 교차 검사 (브라우저별 히트 차이 대응)
+          const intersects = raycaster.intersectObject(wallMesh, true);
           if (intersects.length > 0) {
             const point = intersects[0].point.clone();
             const normal = intersects[0].face.normal
               .clone()
-              .transformDirection(wallMesh.matrixWorld);
+              .transformDirection(intersects[0].object.matrixWorld); // <- hit.object 기준
+
             point.add(normal.multiplyScalar(0.05));
 
             const box = new THREE.Box3().setFromObject(sel);
