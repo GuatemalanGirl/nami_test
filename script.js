@@ -7,7 +7,7 @@ import {
   ROOM_WIDTH
 } from './src/core/constants.js'
 import { createControls } from "./src/core/controls.js"
-import { addDefaultLights } from './src/core/lighting.js'
+import { addDefaultLights, setupEnvironment } from './src/core/lighting.js'
 import { createRenderer } from "./src/core/renderer.js"
 import { createScene } from "./src/core/scene.js"
 import { createRaycaster } from './src/core/raycaster.js';
@@ -54,7 +54,7 @@ import { populateArtwallGrid, setupArtwallPagination } from "./src/ui/artwallGri
 import { checkExhibitPeriod } from './src/ui/exhibitionExpired.js'
 import { setupExhibitSettings } from './src/ui/exhibitionPanel.js'
 import { updateGalleryInfo } from "./src/ui/galleryInfo.js"
-import { closeInfo, showInfo, updatePaintingInfo } from './src/ui/infoModal.js'
+import { closeInfo, showInfo, initInfoModal } from './src/ui/infoModal.js'
 import { populateIntroGrid } from "./src/ui/introGrid.js"
 import { populatePaintingGrid, setupPaintingPagination } from "./src/ui/paintingGrid.js"
 import { getIsResizingPainting } from './src/ui/paintingResizeButtons.js'
@@ -144,7 +144,12 @@ async function init() {
   });
   quill = setupQuillEditor('#quillEditor');
 
-  addDefaultLights(scene)
+  // infoModal이 필요로 하는 컨텍스트 주입 (여기!)
+  initInfoModal({ scene, camera, controls, quill });
+
+  // 조명은 renderer 스케일에 맞춰 세기로 보정 가능
+  addDefaultLights(scene, renderer);   // renderer 인자 추가
+  setupEnvironment(scene, renderer);   // RoomEnvironment/PMREM 기반 IBL 
 
   // 드래그앤드롭 이벤트 등록
   registerDropEvents(renderer.domElement, {
@@ -175,24 +180,22 @@ async function init() {
   })
 
   document.getElementById("infoButton").onclick = () => {
-    const modal = document.getElementById("infoModal")
-    const isVisible = modal.style.display === "block"
+    const modal = document.getElementById("infoModal");
+    const isVisible = modal && getComputedStyle(modal).display !== "none";
+
     if (isVisible) {
-      closeInfo()
-    } else {
-    const sel = getSelectedPainting()
-    if (sel && sel.userData && sel.userData.data) {
-      showInfo(sel.userData.data, sel) // <- data, mesh를 반드시 넘긴다
-    } else {
-      console.warn("선택된 작품이 없습니다")
+      closeInfo();
+      return;
     }
-  }
-    /* 작품선택 모드일 때만 상세 정보 덮어쓰기 */
-    const sel = getSelectedPainting()
-    if (getPaintingMode() && sel) {
-      updatePaintingInfo(sel) // 이제 mesh 하나만 넘김
+
+    const sel = getSelectedPainting();
+    if (sel?.userData?.data) {
+      // showInfo 안에서 updatePaintingInfo 를 호출하므로 중복 호출 불필요
+      showInfo(sel.userData.data, sel);
+    } else {
+      console.warn("선택된 작품이 없습니다");
     }
-  }
+  };
 
   document.getElementById("closeInfoButton").addEventListener("click", closeInfo)
 

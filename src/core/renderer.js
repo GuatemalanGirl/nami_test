@@ -9,6 +9,9 @@ import * as THREE from 'three';
  */
 export function createRenderer(onResize) {
   const renderer = new THREE.WebGLRenderer({ antialias: true }); // 랜더러 생성
+
+  renderer.setClearColor(0xffffff, 1);
+
   // 최신 three
   if ('SRGBColorSpace' in THREE) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -17,15 +20,21 @@ export function createRenderer(onResize) {
     renderer.outputEncoding = THREE.sRGBEncoding;
   }
 
-  // 색 왜곡 줄이고 원본에 가깝게
-  renderer.toneMapping = THREE.NoToneMapping;        // 가장 원본에 충실
-  renderer.toneMappingExposure = 1.0;
+  // PBR에 적합한 톤매핑/노출 (권장)
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; // 원본 대비 자연스러운 대비/하이라이트
+  renderer.toneMappingExposure = 0.4;                 // 1.2 ~ 1.5 사이에서 취향에 맞게 조절
 
-  // PBR 사용 시
+  // 물리 기반 광원 스케일 사용
   renderer.physicallyCorrectLights = true;
-  renderer.setPixelRatio(window.devicePixelRatio); // 픽셀 비율 설정
-  renderer.setSize(window.innerWidth, window.innerHeight); // 캔버스 크기 설정
-  document.body.appendChild(renderer.domElement); // DOM에 붙이기
-  window.addEventListener('resize', onResize, false); // 리사이즈 핸들러 등록
+
+  // 부드러운 실시간 그림자
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 과도한 해상도 방지
+  renderer.setSize(window.innerWidth, window.innerHeight);      // 캔버스 크기 설정
+  document.body.appendChild(renderer.domElement);               // DOM에 붙이기
+
+  window.addEventListener('resize', onResize, false);           // 리사이즈 핸들러 등록
   return renderer;
 }
