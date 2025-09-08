@@ -281,9 +281,7 @@ button.nav-toggle:hover {
   transform: translateX(100%);
   transition: transform 0.4s ease-in-out;
   pointer-events: none;
-  overflow: hidden;            /* 패널 껍데기는 스크롤 숨김(내용만 스크롤) */
-  display: flex;               /* ★ 추가: 내부를 위한 안전한 레이아웃 */
-  flex-direction: column;      /* ★ 추가 */
+  overflow: hidden;
 }
 
 @supports (height: 100dvh) {
@@ -315,7 +313,6 @@ button.nav-toggle:hover {
   position: relative;
   width: 100%;
   height: 100%;
-  /* 패널이 flex여도, 자식 슬라이드는 absolute이므로 기존 동작 유지 */
 }
 
 .settings-logo {
@@ -334,7 +331,7 @@ button.nav-toggle:hover {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;                         /* 슬라이드 영역은 패널 높이만큼 고정 */
+  height: 100%;
   padding: 20px;
   box-sizing: border-box;
   background: var(--panel-slide-bg, rgba(200, 200 , 200, 0.1));
@@ -343,13 +340,6 @@ button.nav-toggle:hover {
   transform: translateX(100%);
   transition: all 0.4s ease-in-out;
   z-index: 0;
-
-  /* ↓↓↓ 내용만 스크롤 되게 하는 핵심 */
-  overflow-y: auto;                     /* ★ 추가: 슬라이드 내부 스크롤 */
-  -webkit-overflow-scrolling: touch;    /* ★ 추가: iOS 관성 스크롤 */
-  overscroll-behavior: contain;         /* ★ 추가: 상/하위로 튀는 스크롤 방지 */
-  scrollbar-gutter: stable;             /* ★ 추가: 스크롤바로 레이아웃 흔들림 방지 */
-  padding-bottom: max(20px, env(safe-area-inset-bottom) + 20px); /* ★ 추가: 하단 버튼 여유 */
 }
 
 .settings-slide.active {
@@ -516,14 +506,6 @@ button.nav-toggle:hover {
   margin-left: calc(-1 * var(--panel-gutter-left));
   margin-right: calc(-1 * var(--panel-pad-right));
   margin-top: 40px; /* 필요시 var(--gap-md, 20px)로 교체 가능 */
-
-  /* 필요 시 하단 고정으로 바꾸려면 아래 주석 해제
-  position: sticky;
-  bottom: 0;
-  background: var(--panel-bg, rgba(255,255,255,0.85));
-  backdrop-filter: blur(6px);
-  padding: 10px 0;
-  */
 }
 
 .button-row button {
