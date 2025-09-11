@@ -56,14 +56,12 @@ export function showPanel(panelId, camera, controls, scene) {
     if (controls) controls.enabled = false // 사용자 회전 비활성화
     setCurrentWall('front') // front부터 시작
     updateWallView(camera, controls) // 카메라 이동
-    document.getElementById('navButtons')?.classList.add('slide-down') // 하단 버튼 숨기기
 
     snapshotPaintingState()
     
   } else {
     setPaintingMode(false) // 작품 선택 모드 해제
-    if (controls) controls.enabled = true
-    document.getElementById('navButtons')?.classList.remove('slide-down') // 하단 버튼 다시 표시
+    if (controls) controls.enabled = true 
   }
 
   // 패널이 panel-intro 에서 panel-main 으로 돌아갈 때 롤백
@@ -135,4 +133,3 @@ export function setupPanelAutoClose() {
     toggle.classList.remove("moving")
   })
 }
-
