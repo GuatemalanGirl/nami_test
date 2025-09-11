@@ -50,13 +50,13 @@ import { getZoomedInState } from './src/domain/zoomState.js'
 import { handleNavKeyDown } from './src/interaction/navKeyHandler.js'
 import { navigateLeft, navigateRight } from './src/interaction/paintingNavigation.js'
 import { moveCameraToHome, onClick, onDoubleClick } from './src/interaction/zoomControls.js'
-import { populateArtwallGrid, setupArtwallPagination } from "./src/ui/artwallGrid.js"
+import { populateArtwallGrid, setupArtwallPagination, initArtwallGridResponsive } from "./src/ui/artwallGrid.js"
 import { checkExhibitPeriod } from './src/ui/exhibitionExpired.js'
 import { setupExhibitSettings } from './src/ui/exhibitionPanel.js'
 import { updateGalleryInfo } from "./src/ui/galleryInfo.js"
 import { closeInfo, showInfo, initInfoModal } from './src/ui/infoModal.js'
 import { populateIntroGrid } from "./src/ui/introGrid.js"
-import { populatePaintingGrid, setupPaintingPagination } from "./src/ui/paintingGrid.js"
+import { populatePaintingGrid, setupPaintingPagination, initPaintingGridResponsive } from "./src/ui/paintingGrid.js"
 import { getIsResizingPainting } from './src/ui/paintingResizeButtons.js'
 import { showPanel, setupPanelAutoClose } from './src/ui/panel.js'
 import { initSocialPanel } from './src/ui/socialPanel.js'
@@ -65,7 +65,8 @@ import {
   onRestoreTextureSet,
   populateTextureGrid,
   setupApplyButton,
-  setupTexturePagination
+  setupTexturePagination,
+  initTextureGridResponsive
 } from './src/ui/textureGrid.js'
 import { addWallNavListeners, alignToCameraWall } from './src/ui/wallNavigation.js'
 import {
