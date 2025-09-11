@@ -24,9 +24,15 @@ export function initInfoModal(ctx) {
  */
 export function showInfo(data, mesh) {
   // 초기 간단 표시 (구버전 호환용)
-  document.getElementById("infoContent").innerHTML =
-    `<h2>${(data?.title_kor || data?.title || "(제목 없음)")} ${data?.title_eng ? `<small>(${data.title_eng})</small>` : ""}</h2>
-     <p>${data?.description || ""}</p>`;
+  const infoContent = document.getElementById("infoContent");
+  if (infoContent) {
+    infoContent.innerHTML =
+      `<h2 class="info-title">${(data?.title_kor || data?.title || "(제목 없음)")}
+         ${data?.title_eng ? `<small>(${data.title_eng})</small>` : ""}</h2>
+       <div class="info-meta">
+         <p>${data?.description || ""}</p>
+       </div>`;
+  }
 
   // 모달은 flex로 열어야 내부 스크롤/레이아웃이 유지됨
   const modal = document.getElementById("infoModal");
@@ -51,7 +57,7 @@ export function closeInfo() {
   const modal = document.getElementById("infoModal");
   if (!modal) return;
 
-  modal.style.display = "none";
+  modal.style.display = "none"; // 닫을 때는 none
 
   // 스토리 편집 완료 전용 위치 클래스 제거 (다음에 열릴 때는 기본 위치)
   modal.classList.remove("story-finished");
@@ -67,18 +73,15 @@ export function closeInfo() {
 
   // 작품선택모드(또는 서문쓰기모드)일 때만 버튼 복원
   if ((isPaintingMode || isIntroMode) && selectedPainting) {
-    // 주입된 컨텍스트가 있을 때만 전체 인자 전달
     if (renderCtx?.scene && renderCtx?.camera && renderCtx?.controls && renderCtx?.quill) {
       showPaintingEditButtons(selectedPainting, renderCtx.scene, renderCtx.camera, renderCtx.controls, renderCtx.quill);
     } else {
-      // 안전 경로: 최소 인자만 (라이브러리 시그니처에 따라 다를 수 있음)
       try { showPaintingEditButtons(selectedPainting); } catch (_) {}
     }
   } else {
     hidePaintingEditButtons();
   }
 }
-
 
 /**
  * 그림 정보 모달의 내부 콘텐츠를 업데이트
@@ -88,10 +91,6 @@ export function updatePaintingInfo(mesh) {
   const infoContent = document.getElementById("infoContent")
   if (!infoContent) return
 
-  /* userData.story가 있으면 사용자 설명, 아니면 기본 설명
-  const html = mesh.userData.story || (mesh.userData.data && mesh.userData.data.description) || '(설명 없음)';
-  infoContent.innerHTML = html;*/
-
   const data = mesh?.userData?.data || {}
   const story = (mesh?.userData?.story || "").trim()
     ? mesh.userData.story
@@ -99,17 +98,19 @@ export function updatePaintingInfo(mesh) {
 
   // 새 메타데이터 구조 반영 (소제목 없이 그대로 출력)
   const titleKor = data.title_kor || "(제목 없음)"
-  const titleEng = data.title_eng ? `(${data.title_eng})` : ""
+  const titleEng = data.title_eng ? `${data.title_eng}` : ""
   const artistKor = data.artist_kor || ""
   const artistEng = data.artist_eng || ""
   const mediumYear = data.medium_year || ""
   const dimensions = data.dimensions || ""
 
   infoContent.innerHTML = `
-    <h2>${titleKor} <small>${titleEng}</small></h2>
-    <p>${artistKor}<br>${artistEng}</p>
-    <p>${mediumYear}</p>
-    <p>${dimensions}</p>
+    <h2 class="info-title">${titleKor} <small>${titleEng}</small></h2>
+    <div class="info-meta">
+      <p class="artist">${artistKor}${artistEng ? `<br>${artistEng}` : ""}</p>
+      <p class="year">${mediumYear}</p>
+      <p class="size">${dimensions}</p>
+    </div>
     <p class="description">${story}</p>
   `
 
