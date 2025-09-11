@@ -274,7 +274,7 @@ button.nav-toggle:hover {
 
   /* 배경 */
   background-color: rgba(0, 0, 0, 0.7);
-  background-image: url("../public/img/overlays/instruction.png");
+  background-image: url("../public/overlays/instruction.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -285,7 +285,7 @@ button.nav-toggle:hover {
   pointer-events: none;
 
   /* 양방향 전환 (숨길 때 visibility 지연) */
-  transition: opacity .25s ease, visibility 0s linear .25a
+  transition: opacity .25s ease, visibility 0s linear .25s
 }
 
 /* 보일 때 */
