@@ -24,8 +24,8 @@
   --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3); /* 토글 버튼 */
 
   /* 모달 */
-  --modal-bg: rgba(255, 255, 255, 0.9);
-  --shadow-modal: 0 4px 10px rgba(0, 0, 0, 0.3);
+  --modal-bg: rgba(255, 255, 255, 0.8);
+  --shadow-modal: 0 4px 10px rgba(0, 0, 0, 0.2);
 
   /* 로딩 오버레이 배경 */
   --overlay-bg: rgba(255, 255, 255, 0.95);
