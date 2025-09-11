@@ -1,9 +1,47 @@
 // ui/paintingGrid.js
 
 import {
-  getPage, setPage, getPaintingsByPage, getTotalPaintingPages, getPaintingThumbUrl,
+  getPage, setPage,
+  getPaintingsByPage, getTotalPaintingPages, getPaintingThumbUrl,
+  // 추가: 페이지당 개수 동적 제어
+  getPaintingPageSize, setPaintingPageSize
 } from "../data/painting.js";
 import { isCoarsePointer, dispatchSyntheticDrop } from "./touchDropFallback.js";
+
+/* =========================================
+   추가: 반응형(모바일/데스크톱) 페이지 크기 설정
+   - 데스크톱: 9개(3×3)
+   - 모바일(≤1180px): 4개(4×1)
+   ========================================= */
+
+/**
+ * 뷰포트에 맞춰 페이지 크기(9↔4) 적용 + 리렌더
+ * - 최초 1회 호출 후, 미디어쿼리 변화에도 자동 반영
+ */
+export function initPaintingGridResponsive() {
+  // 가로(1180px) 기준 확장
+  const mq = window.matchMedia("(max-width: 1180px)");
+
+  const apply = () => {
+    const nextSize = mq.matches ? 4 : 9;
+    if (getPaintingPageSize && getPaintingPageSize() === nextSize) {
+      populatePaintingGrid();
+      updatePageButtons();
+      return;
+    }
+    setPaintingPageSize(nextSize);  // 페이지당 개수 변경
+    setPage(0);                     // 안전하게 첫 페이지로
+    populatePaintingGrid();
+    updatePageButtons();
+  };
+
+  apply();
+  // 미디어쿼리 변화 대응
+  if (mq.addEventListener) mq.addEventListener("change", apply);
+  else if (mq.addListener) mq.addListener(apply); // 구형 폴백
+}
+
+// ───────────────────────────────────────────────────────────────
 
 // 썸네일 그리드 생성 + 이벤트 등록
 export function populatePaintingGrid() {
@@ -12,8 +50,12 @@ export function populatePaintingGrid() {
 
   grid.innerHTML = ""; // 기존 내용 초기화
 
-  const page = getPage();             // 현재 페이지(0-based)
-  const itemsPerPage = 9;
+  const page = getPage(); // 현재 페이지(0-based)
+  // 변경: 하드코딩 9 → 동적 페이지 크기 사용
+  const itemsPerPage = (typeof getPaintingPageSize === "function")
+    ? getPaintingPageSize()
+    : 9;
+
   const currentItems = getPaintingsByPage(); // 현재 페이지 아이템 목록
   const coarse = isCoarsePointer();
 
@@ -24,7 +66,7 @@ export function populatePaintingGrid() {
     thumb.loading = "lazy";
     thumb.src = getPaintingThumbUrl(painting.filename);
     thumb.alt = painting.title || painting.filename || "painting";
-    thumb.draggable = !coarse;               // ★ coarse면 네이티브 DnD 끔
+    thumb.draggable = !coarse;               // coarse면 네이티브 DnD 끔
     thumb.dataset.index = String(globalIndex);
     thumb.classList.add("thumbnail");
     thumb.style.touchAction = "manipulation";
@@ -72,13 +114,28 @@ export function populatePaintingGrid() {
   updatePageButtons();
 }
 
+/** 추가: 이미지/커스텀 요소용 비활성 처리 유틸 */
+function setNavDisabled(el, disabled) {
+  if (!el) return;
+  el.setAttribute("aria-disabled", disabled ? "true" : "false");
+  el.classList.toggle("is-disabled", !!disabled);
+  el.style.pointerEvents = disabled ? "none" : "";
+  el.style.opacity = disabled ? "0.35" : "";
+}
+
 function updatePageButtons() {
   const prev = document.getElementById("prevPageBtn");
   const next = document.getElementById("nextPageBtn");
   const maxPage = getTotalPaintingPages() - 1; // 마지막 페이지 인덱스
+  const isFirst = getPage() === 0;
+  const isLast  = getPage() >= maxPage;
 
-  if (prev) prev.disabled = getPage() === 0;
-  if (next) next.disabled = getPage() >= maxPage;
+  if (prev) prev.disabled = isFirst;
+  if (next) next.disabled = isLast;
+
+  // 추가: 이미지/커스텀 요소 접근성 & 스타일 비활성화
+  setNavDisabled(prev, isFirst);
+  setNavDisabled(next, isLast);
 }
 
 // 페이지 버튼 이벤트 바인딩
@@ -88,6 +145,9 @@ export function setupPaintingPagination() {
 
   if (prev) {
     prev.addEventListener("click", () => {
+      // 🔧 추가: aria-disabled 방어
+      if (prev.getAttribute("aria-disabled") === "true") return;
+
       if (getPage() > 0) {
         setPage(getPage() - 1);
         populatePaintingGrid();
@@ -96,6 +156,8 @@ export function setupPaintingPagination() {
   }
   if (next) {
     next.addEventListener("click", () => {
+      if (next.getAttribute("aria-disabled") === "true") return;
+
       const maxPage = getTotalPaintingPages() - 1;
       if (getPage() < maxPage) {
         setPage(getPage() + 1);
