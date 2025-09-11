@@ -318,10 +318,17 @@ document.getElementById("settingsToggle").addEventListener("click", () => {
       commitArtwallChanges(scene)
     }
 
-    // 슬라이드 상테를 메인으로 되돌린 뒤 패널 닫기
+    // 슬라이드 상태를 메인으로 되돌린 뒤 패널 닫기
     showPanel("panel-main", camera, controls)
     panel.classList.remove("open")
     gear.classList.remove("moving")
+
+    // 패널 닫을 때 navButtons/Toggle 다시 보이기
+    document.getElementById("navButtons")?.classList.remove("slide-down")       
+    const _navToggle = document.getElementById("navButtonsToggle")               
+    _navToggle?.classList.remove("slide-down")                                   
+    _navToggle?.style.removeProperty('display')                                   
+
   } else {
     if (document.getElementById("infoModal").style.display === "block") {
       closeInfo()
@@ -329,8 +336,16 @@ document.getElementById("settingsToggle").addEventListener("click", () => {
     showPanel("panel-main", camera, controls) // 설정창 열 때 항상 메인 패널부터 시작
     panel.classList.add("open")
     gear.classList.add("moving")
+
+    // 패널 열릴 때 navButtons/Toggle 숨기기
+    document.getElementById("navButtons")?.classList.add("slide-down")           
+    const _navToggle = document.getElementById("navButtonsToggle")              
+    _navToggle?.classList.add("slide-down")                                     
+    _navToggle && (_navToggle.style.display = 'none')                             
   }
 })
+
+
 
 function onPointerMove(event) {
   // 캔버스 기준 정규화 좌표 사용(레이캐스트 정확도 향상)
@@ -354,17 +369,21 @@ function onPointerMove(event) {
   }
 }
 
-function hideInstructions() {
-  document.getElementById("instructionOverlay").style.display = "none"
-}
+const overlay = document.getElementById('instructionOverlay');
 
 function showInstructions() {
-  document.getElementById("instructionOverlay").style.display = "flex"
+  // 보이기: CSS가 opacity/visibility로 페이드 인
+  overlay.setAttribute('data-visible', 'true');
 }
 
-document.getElementById("instructionOverlay").addEventListener("click", () => {
-  document.getElementById("instructionOverlay").style.display = "none"
-})
+function hideInstructions() {
+  // 숨기기: CSS가 opacity/visibility로 페이드 아웃
+  overlay.removeAttribute('data-visible');
+}
+
+// 클릭해서 닫기
+overlay.addEventListener('click', hideInstructions);
+
 
 async function initApp() {
   // 먼저 저장된 texture set을 미리 기억해둠
@@ -384,22 +403,21 @@ async function initApp() {
     await init(); // Three.js 초기화
 
     // === 배경 패널 썸네일 생성 (페이징 적용) ===
-    setTexturePage(0); // 항상 첫 페이지부터 시작
-    populateTextureGrid((name) =>
+    initTextureGridResponsive((name) =>
       applyPreviewTextureSet(name, scene, textureLoader)
     );
     setupTexturePagination((name) =>
       applyPreviewTextureSet(name, scene, textureLoader)
     );
-
+  
     setupApplyButton(scene, textureLoader);
 
     // 썸네일 그리드 및 페이징 UI
     setupArtwallPagination();       // artwallGrid.js에서 import
-    populateArtwallGrid();          // artwallGrid.js에서 import
+    initArtwallGridResponsive();          // artwallGrid.js에서 import
 
     setupPaintingPagination();      // paintingGrid.js에서 import
-    populatePaintingGrid();         // paintingGrid.js에서 import
+    initPaintingGridResponsive();         // paintingGrid.js에서 import
 
     // 미리 선택된 텍스처 세트 적용
     const confirmedSet = getConfirmedTextureSet()
