@@ -19,7 +19,12 @@
     <!-- CSS 모듈: tokens → base → components → utilities -->
     <link rel="stylesheet" href="./src/styles/tokens.css" />
     <link rel="stylesheet" href="./src/styles/base.css" />
-    <link rel="stylesheet" href="./src/styles/components.css" />
+
+    <!-- 데스크탑 전용 -->
+    <link rel="stylesheet" href="./src/styles/components.css" media="(min-width: 1181px)">
+    <!-- 모바일/태블릿 전용 (xs/sm/md) -->
+    <link rel="stylesheet" href="./src/styles/components.mobile.css" media="(max-width: 1180px)">
+
     <link rel="stylesheet" href="./src/styles/utilities.css" />
 
     <!-- (테스트 중에만) 아직 못 옮긴 스타일이 있으면 임시로 -->
@@ -33,21 +38,10 @@
       <div class="loadingText">로딩 중..</div>
     </div>
 
-    <div id="instructionOverlay">
-      <div class="instructionContent">
-        <h2><strong>나만의미술관 관람 안내</strong></h2>
-        <ul>
-          <li>🖱️ 드래그/스크롤로 시점 회전</li>
-          <li>⬅️ / ➡️ 버튼으로 작품 넘기기</li>
-          <li>❔ 버튼으로 작품 설명 보기</li>
-          <li>🖼️ 작품 클릭 → 가까이 보기</li>
-        </ul>
-        <p style="margin-top: 20px">클릭하면 시작합니다!</p>
-      </div>
-    </div>
+    <div id="instructionOverlay"></div>
 
     <img
-      src="/logo/nami_logo_main.svg"
+      src="./src/assets/img/logo/nami_logo_main.svg"
       alt="Logo"
       class="logo"
     />
@@ -73,46 +67,46 @@
       <div id="infoContent"></div>
       <div class="info-close-wrap">
         <button id="closeInfoButton" class="icon-btn sm">
-          <img src="icons/back.svg" alt="닫기" />
+          <img src="./src/assets/img/icons/back.svg" alt="닫기" />
         </button>
       </div>
     </div>
 
     <!-- 설정 버튼 (톱니바퀴 아이콘) -->
     <img id="settingsToggle" class="settings-icon"
-         src="icons/settingsButton.svg" alt="설정">
+         src="./src/assets/img/icons/settingsButton.svg" alt="설정">
 
     <!-- 슬라이딩 설정 패널 -->
     <div id="settingsPanel" class="settings-panel">
-      <img src="icons/cogwheel.svg" alt="Settings Panel Logo" class="settings-logo" />
+      <img src="./src/assets/img/icons/cogwheel.svg" alt="Settings Panel Logo" class="settings-logo" />
       <div class="settings-container">
         <!-- 메인 메뉴 -->
         <div class="settings-slide active" id="panel-main">
-          <h2>설정 </h2>
+          <h2>설정</h2>
           <h4>각 항목을 클릭하면 나만의 미술관을<br />개성있게 꾸밀 수 있습니다.</h4>
           <div class="settings-menu">
             <button id="themeBtn">
-              <img class="menu-icon" src="icons/shortcutTheme.svg" alt="">
+              <img class="menu-icon" src="./src/assets/img/icons/shortcutTheme.svg" alt="">
               <span>전시 주제</span>
             </button>
             <button id="bgBtn">
-              <img class="menu-icon" src="icons/shortcutBackground.svg" alt="">
+              <img class="menu-icon" src="./src/assets/img/icons/shortcutBackground.svg" alt="">
               <span>미술관 배경</span>
             </button>
             <button id="paintingsBtn">
-              <img class="menu-icon" src="icons/shortcutPaintings.svg" alt="">
+              <img class="menu-icon" src="./src/assets/img/icons/shortcutPaintings.svg" alt="">
               <span>작품</span>
             </button>
             <button id="introBtn">
-              <img class="menu-icon" src="icons/shortcutIntro.svg" alt="">
+              <img class="menu-icon" src="./src/assets/img/icons/shortcutIntro.svg" alt="">
               <span>전시 글 / 포스터</span>
             </button>
             <button id="artwallsBtn">
-              <img class="menu-icon" src="icons/shortcutArtwall.svg" alt="">
+              <img class="menu-icon" src="./src/assets/img/icons/shortcutArtwall.svg" alt="">
               <span>아트 스티커</span>
             </button>
             <button id="invitationBtn">
-              <img class="menu-icon" src="icons/shortcutInvitation.svg" alt="">
+              <img class="menu-icon" src="./src/assets/img/icons/shortcutInvitation.svg" alt="">
               <span>초대장</span>
             </button>
           </div>
@@ -123,40 +117,39 @@
           <!-- 패널 상단 바로가기 바 -->
           <div class="panel-shortcut">
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-theme">
-              <img src="icons/shortcutTheme.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutTheme.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-background">
-              <img src="icons/shortcutBackground.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutBackground.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-paintings">
-              <img src="icons/shortcutPaintings.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutPaintings.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-intro">
-               <img src="icons/shortcutIntro.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutIntro.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-artwalls">
-               <img src="icons/shortcutArtwall.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutArtwall.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-invitation">
-              <img src="icons/shortcutInvitation.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutInvitation.svg" alt="" />
             </button>
           </div>
           <h3>전시 주제</h3>
           <h4>
             나만의 전시 주제를 설정합니다.<br />전시명과 전시 기간을 입력합니다.
           </h4>
-          <label for="exhibitTitle">전시명</label>
-          <input
-            type="text"
-            id="exhibitTitle"
-            placeholder="예: 나만의 미술관"
-          />
+          
+          <div class="exhibit-fields-row">
+            <label for="exhibitTitle">전시명</label>
+            <input type="text" id="exhibitTitle" placeholder="예: 나만의 미술관" />
 
-          <label for="exhibitStart">전시 시작일</label>
-          <input type="date" id="exhibitStart" />
+            <label for="exhibitStart">전시 시작일</label>
+            <input type="date" id="exhibitStart" />
 
-          <label for="exhibitEnd">전시 종료일</label>
-          <input type="date" id="exhibitEnd" />
+            <label for="exhibitEnd">전시 종료일</label>
+            <input type="date" id="exhibitEnd" />
+          </div>
 
           <label for="visibilityToggle">전시 공개 여부</label>
           <div class="switch-wrapper">
@@ -169,10 +162,10 @@
 
           <div class="button-row">
             <button class="backToMainBtn">
-              <img src="icons/back.svg" alt="뒤로가기" />
+              <img src="./src/assets/img/icons/back.svg" alt="뒤로가기" />
             </button>
             <button id="saveExhibitButton" class="saveExhibitButton">
-              <img src="icons/apply.svg" alt="확인" />
+              <img src="./src/assets/img/icons/apply.svg" alt="확인" />
             </button>
           </div>
         </div>
@@ -181,22 +174,22 @@
           <!-- 패널 상단 바로가기 바 -->
           <div class="panel-shortcut">
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-theme">
-              <img src="icons/shortcutTheme.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutTheme.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-background">
-              <img src="icons/shortcutBackground.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutBackground.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-paintings">
-              <img src="icons/shortcutPaintings.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutPaintings.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-intro">
-               <img src="icons/shortcutIntro.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutIntro.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-artwalls">
-               <img src="icons/shortcutArtwall.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutArtwall.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-invitation">
-              <img src="icons/shortcutInvitation.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutInvitation.svg" alt="" />
             </button>
           </div>
           <h3>미술관 배경</h3>
@@ -209,9 +202,9 @@
   
             <!-- 좌우 아이콘 -->
             <img id="prevBgPageBtn" class="grid-nav-icon prev"
-                 src="icons/gridNavLeft.svg" alt="이전">
+                 src="./src/assets/img/icons/gridNavLeft.svg" alt="이전">
             <img id="nextBgPageBtn" class="grid-nav-icon next"
-                 src="icons/gridNavRight.svg" alt="다음">
+                 src="./src/assets/img/icons/gridNavRight.svg" alt="다음">
 
             <!-- 배경 썸네일 그리드 -->
             <div class="background-grid-wrapper">
@@ -224,10 +217,10 @@
 
           <div class="button-row">
             <button class="backToMainBtn">
-              <img src="icons/back.svg" alt="뒤로가기" />
+              <img src="./src/assets/img/icons/back.svg" alt="뒤로가기" />
             </button>
             <button class="saveExhibitButton">
-              <img src="icons/apply.svg" alt="확인" />
+              <img src="./src/assets/img/icons/apply.svg" alt="확인" />
             </button>
           </div>
         </div>
@@ -236,39 +229,28 @@
           <!-- 패널 상단 바로가기 바 -->
           <div class="panel-shortcut">
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-theme">
-              <img src="icons/shortcutTheme.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutTheme.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-background">
-              <img src="icons/shortcutBackground.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutBackground.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-paintings">
-              <img src="icons/shortcutPaintings.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutPaintings.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-intro">
-               <img src="icons/shortcutIntro.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutIntro.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-artwalls">
-               <img src="icons/shortcutArtwall.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutArtwall.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-invitation">
-              <img src="icons/shortcutInvitation.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutInvitation.svg" alt="" />
             </button>
           </div>
           <h3>작품</h3>
-          <ol class="panel-painting-instructions">
-            <li>
-              <h4>작품 배치</h4>
-              <p>아래 리스트의 전시하고자 하는 작품을 선택하고 드래그하여 원하는 위치에 배치합니다.</p>
-            </li>
-            <li>
-              <h4>작품 크기 조절 및 삭제</h4>
-              <p>벽면 작품을 클릭하면 작품사이즈를 드래그하여 수정할 수 있고 삭제 버튼을 눌러 삭제할 수 있습니다.</p>
-            </li>
-            <li>
-              <h4>작품 이야기 변경</h4>
-              <p>벽면의 작품을 클릭하여 각 작품에 해당하는 나만의 이야기를 입력할 수 있습니다.</p>
-            </li>
-          </ol>
+          <h4>
+            원하는 작품을 드래그하여 배치합니다.<br />작품을 클릭하면 크기를 조절할 수 있습니다.<br />편집 창에서 나만의 작품 이야기를 입력합니다.
+          </h4>
 
           <!-- 좌우 벽 전환 버튼 -->
           <div class="wall-nav">
@@ -282,9 +264,9 @@
   
             <!-- 좌우 아이콘 (버튼 대신 img 직접 클릭) -->
             <img id="prevPageBtn" class="grid-nav-icon prev"
-                 src="icons/gridNavLeft.svg" alt="이전">
+                 src="./src/assets/img/icons/gridNavLeft.svg" alt="이전">
             <img id="nextPageBtn" class="grid-nav-icon next"
-                 src="icons/gridNavRight.svg" alt="다음">
+                 src="./src/assets/img/icons/gridNavRight.svg" alt="다음">
 
               <!-- 그리드 -->
               <div class="painting-grid-wrapper">
@@ -299,7 +281,7 @@
           <!-- 확인/뒤로가기 버튼 -->
           <div class="button-row">
             <button class="backToMainBtn">
-              <img src="icons/back.svg" alt="뒤로가기" />
+              <img src="./src/assets/img/icons/back.svg" alt="뒤로가기" />
             </button>
           </div>
         </div>
@@ -308,39 +290,29 @@
           <!-- 패널 상단 바로가기 바 -->
           <div class="panel-shortcut">
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-theme">
-              <img src="icons/shortcutTheme.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutTheme.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-background">
-              <img src="icons/shortcutBackground.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutBackground.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-paintings">
-              <img src="icons/shortcutPaintings.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutPaintings.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-intro">
-               <img src="icons/shortcutIntro.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutIntro.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-artwalls">
-               <img src="icons/shortcutArtwall.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutArtwall.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-invitation">
-              <img src="icons/shortcutInvitation.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutInvitation.svg" alt="" />
             </button>
           </div>
           <h3>전시 글 / 포스터</h3>
-          <ol class="panel-intro-instructions">
-            <li>
-              <h4>전시 글 형태 선택</h4>
-              <p>캔버스 또는 투명필름 중 원하는 전시 글 형태를 선택하고 드래그하여 원하는 위치에 배치 합니다.</p>
-            </li>
-            <li>
-              <h4>전시 글 입력 및 크기 조절</h4>
-              <p>전시 글 영역을 클릭하여 글을 입력합니다.</p>
-            </li>
-            <li>
-              <h4>포스터 올리기</h4>
-              <p>포스터를 선택하고 드래그하여 원하는 위치에 배치 후 이미지를 불러옵니다. 포스터는 한 장만 사용 할 수 있습니다.</p>
-            </li>
-          </ol>
+          <h4>
+            전시 글 형태를 선택하고 드래그하여 배치합니다.<br />전시 글 영역을 클릭하여 글을 입렵합니다.<br />포스터를 선택하고 저장된 이미지를 불러옵니다.
+          </h4>
+
           <div class="wall-nav">
             <button class="wall-left-btn">&lt;</button>
             <span class="current-wall-label">벽면 1</span>
@@ -349,7 +321,7 @@
           <div class="intro-object-grid" id="introGrid"></div>
           <div class="button-row">
             <button class="backToMainBtn">
-              <img src="icons/back.svg" alt="뒤로가기" />
+              <img src="./src/assets/img/icons/back.svg" alt="뒤로가기" />
             </button>
           </div>
         </div>
@@ -358,27 +330,27 @@
           <!-- 패널 상단 바로가기 바 -->
           <div class="panel-shortcut">
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-theme">
-              <img src="icons/shortcutTheme.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutTheme.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-background">
-              <img src="icons/shortcutBackground.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutBackground.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-paintings">
-              <img src="icons/shortcutPaintings.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutPaintings.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-intro">
-               <img src="icons/shortcutIntro.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutIntro.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-artwalls">
-               <img src="icons/shortcutArtwall.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutArtwall.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-invitation">
-              <img src="icons/shortcutInvitation.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutInvitation.svg" alt="" />
             </button>
           </div>
           <h3>아트 스티커</h3>
           <h4>
-            아트 스티커를 선택하고 드래그하여 원하는 위치에 부착 합니다.
+            아트 스티커를 선택하고 드래그하여<br/>원하는 위치에 부착 합니다.
           </h4>
           <div class="wall-nav">
             <button class="wall-left-btn">&lt;</button>
@@ -390,9 +362,9 @@
 
             <!-- 좌우 아이콘 -->
             <img id="prevArtPageBtn" class="grid-nav-icon prev"
-                 src="icons/gridNavLeft.svg" alt="이전">
+                 src="./src/assets/img/icons/gridNavLeft.svg" alt="이전">
             <img id="nextArtPageBtn" class="grid-nav-icon next"
-                 src="icons/gridNavRight.svg" alt="다음">
+                 src="./src/assets/img/icons/gridNavRight.svg" alt="다음">
 
             <!-- 아트월 썸네일 그리드 -->
             <div class="artwall-grid-wrapper">
@@ -405,7 +377,7 @@
 
           <div class="button-row">
             <button class="backToMainBtn">
-              <img src="icons/back.svg" alt="뒤로가기" />
+              <img src="./src/assets/img/icons/back.svg" alt="뒤로가기" />
             </button>
           </div>
         </div>
@@ -414,29 +386,29 @@
           <!-- 패널 상단 바로가기 바 -->
           <div class="panel-shortcut">
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-theme">
-              <img src="icons/shortcutTheme.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutTheme.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-background">
-              <img src="icons/shortcutBackground.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutBackground.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-paintings">
-              <img src="icons/shortcutPaintings.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutPaintings.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-intro">
-               <img src="icons/shortcutIntro.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutIntro.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-artwalls">
-               <img src="icons/shortcutArtwall.svg" alt="" />
+               <img src="./src/assets/img/icons/shortcutArtwall.svg" alt="" />
             </button>
             <button class="shortcut-btn" data-role="panel-shortcut" data-panel="panel-invitation">
-              <img src="icons/shortcutInvitation.svg" alt="" />
+              <img src="./src/assets/img/icons/shortcutInvitation.svg" alt="" />
             </button>
           </div>
           <h3>초대장</h3>
           <h4>친구에게 초대장을 보냅니다.<br />초대장 전달 방식을 선택합니다.</h4>
           <div class="button-row">
             <button class="backToMainBtn">
-              <img src="icons/back.svg" alt="뒤로가기" />
+              <img src="./src/assets/img/icons/back.svg" alt="뒤로가기" />
             </button>
           </div>
         </div>
@@ -464,10 +436,10 @@
       <div id="quillEditor"></div>
       <div id="overlayBtnBar">
         <button id="introTextApplyBtn" class="icon-btn sm">
-          <img src="icons/apply.svg" alt="확인" />
+          <img src="./src/assets/img/icons/apply.svg" alt="확인" />
         </button>
         <button id="introTextCancelBtn" class="icon-btn sm">
-          <img src="icons/back.svg" alt="취소" />
+          <img src="./src/assets/img/icons/back.svg" alt="취소" />
         </button>
       </div>
     </div>
@@ -494,6 +466,6 @@
     <!-- 소셜 패널 토글 버튼 (우측 하단) -->
     <button id="socialToggle" class="social-toggle"></button>
 
-    <script type="module" src="script.js"></script>
+    <script type="module" src="./script.js"></script>
   </body>
 </html>
