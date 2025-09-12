@@ -274,7 +274,7 @@ button.nav-toggle:hover {
 
   /* 배경 */
   background-color: rgba(0, 0, 0, 0.7);
-  background-image: url("../public/overlays/instruction.png");
+  background-image: url("../../overlays/instruction.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
