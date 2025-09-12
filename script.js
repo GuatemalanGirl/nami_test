@@ -498,15 +498,47 @@ document.getElementById("homeButton").addEventListener("click", () => {
 
 window.addEventListener('DOMContentLoaded', initApp);
 
+
 // ===== 네비게이션 버튼 토글 =====
 const navToggleBtn = document.getElementById("navButtonsToggle");
 const navButtons = document.getElementById("navButtons");
 
 // 토글 버튼 클릭 시 실행
 navToggleBtn.addEventListener("click", () => {
-  navButtons.classList.toggle("slide-down");  // 네비게이션 버튼 숨김/보임 토글
-  navToggleBtn.classList.toggle("active");    // 버튼 아이콘 상태 (눈뜸/감음) 토글
+   // 설정 패널 열려 있으면 토글 무시 (패널이 열려있을 땐 항상 숨김 유지)
+    const panel = document.getElementById("settingsPanel");
+    if (panel?.classList.contains("open")) return;
+    navButtons.classList.toggle("slide-down");
+    navToggleBtn.classList.toggle("active");
 });
+
+// 설정 패널 열림/닫힘 ↔ NAV 가시성 자동 동기화 (경로 무관)
+(function initNavVisibilitySync() {
+  const panel = document.getElementById("settingsPanel");
+  if (!panel || !navButtons || !navToggleBtn) return;
+
+  const sync = () => {
+    const isOpen = panel.classList.contains("open");
+    if (isOpen) {
+      // 패널 열림: NAV 강제 숨김
+      navButtons.classList.add("slide-down");
+      navToggleBtn.classList.add("slide-down", "active"); // 아이콘 눈감김 상태
+    } else {
+      // 패널 닫힘: NAV 강제 복구
+      navButtons.classList.remove("slide-down");
+      navToggleBtn.classList.remove("slide-down", "active");
+    }
+  };
+
+  // 초기 동기화 1회
+  sync();
+
+  // settingsPanel의 class 변화 감시 (transitionend 의존 X)
+  new MutationObserver((muts) => {
+    if (muts.some(m => m.attributeName === "class")) sync();
+  }).observe(panel, { attributes: true, attributeFilter: ["class"] });
+})();
+
 
 // 현재 navButtons 숨김 여부 확인
 function isNavButtonsHidden() {

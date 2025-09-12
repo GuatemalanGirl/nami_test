@@ -16,6 +16,54 @@ export function initInfoModal(ctx) {
   renderCtx = ctx || null;
 }
 
+/** -----------------------------------------------------------------------
+ * 내부 컨테이너 보장:
+ * - #infoContent : flex 컨텍스트 (min-height:0)
+ * - .description : 스크롤 컨테이너 (div로 고정)
+ * 기존 주석/기능 유지하면서, 편집 후에도 스크롤이 항상 살아있도록 보강.
+ * ---------------------------------------------------------------------- */
+function ensureInfoContainers() {
+  const modal = document.getElementById('infoModal');
+  if (!modal) return { infoContent: null, desc: null, metaWrap: null };
+
+  // #infoContent 보장
+  let infoContent = modal.querySelector('#infoContent');
+  if (!infoContent) {
+    infoContent = document.createElement('div');
+    infoContent.id = 'infoContent';
+    // CSS 로드 순서가 꼬여도 안전하게 동작하도록 인라인 보강(있어도 무해)
+    infoContent.style.display = 'flex';
+    infoContent.style.flexDirection = 'column';
+    infoContent.style.flex = '1 1 auto';
+    infoContent.style.minHeight = '0';
+    modal.appendChild(infoContent);
+  }
+
+  // .description 보장 (p가 있을 경우 div로 교체)
+  let desc = infoContent.querySelector('.description');
+  if (!desc) {
+    desc = document.createElement('div');
+    desc.className = 'description';
+    infoContent.appendChild(desc);
+  } else if (desc.tagName !== 'DIV') {
+    const newDesc = document.createElement('div');
+    newDesc.className = 'description';
+    newDesc.innerHTML = desc.innerHTML; // 기존 내용 보존
+    infoContent.replaceChild(newDesc, desc);
+    desc = newDesc;
+  }
+
+  // 메타 전용 래퍼 (.info-meta-wrap) 보장 — 본문(.description) 앞에 위치
+  let metaWrap = infoContent.querySelector('.info-meta-wrap');
+  if (!metaWrap) {
+    metaWrap = document.createElement('div');
+    metaWrap.className = 'info-meta-wrap';
+    infoContent.insertBefore(metaWrap, desc);
+  }
+
+  return { infoContent, desc, metaWrap };
+}
+
 /**
  * 그림 정보 모달(infoModal)을 열고, 데이터를 채움
  * @param {Object} data - 그림 메타데이터
@@ -24,15 +72,16 @@ export function initInfoModal(ctx) {
  */
 export function showInfo(data, mesh) {
   // 초기 간단 표시 (구버전 호환용)
-  const infoContent = document.getElementById("infoContent");
-  if (infoContent) {
-    infoContent.innerHTML =
-      `<h2 class="info-title">${(data?.title_kor || data?.title || "(제목 없음)")}
-         ${data?.title_eng ? `<small>(${data.title_eng})</small>` : ""}</h2>
-       <div class="info-meta">
-         <p>${data?.description || ""}</p>
-       </div>`;
-  }
+  // (유지하되 동작은 비활성) .description이 날아가지 않도록 전체 innerHTML 교체는 중단
+  // const infoContent = document.getElementById("infoContent");
+  // if (infoContent) {
+  //   infoContent.innerHTML =
+  //     `<h2 class="info-title">${(data?.title_kor || data?.title || "(제목 없음)")}
+  //        ${data?.title_eng ? `<small>(${data.title_eng})</small>` : ""}</h2>
+  //      <div class="info-meta">
+  //        <p>${data?.description || ""}</p>
+  //      </div>`;
+  // }
 
   // 모달은 flex로 열어야 내부 스크롤/레이아웃이 유지됨
   const modal = document.getElementById("infoModal");
@@ -88,8 +137,9 @@ export function closeInfo() {
  * @param {THREE.Mesh} mesh - 선택된 그림의 3D 객체
  */
 export function updatePaintingInfo(mesh) {
-  const infoContent = document.getElementById("infoContent")
-  if (!infoContent) return
+  // 컨테이너/스크롤 구조 보장 (#infoContent / .info-meta-wrap / .description)
+  const { infoContent, desc, metaWrap } = ensureInfoContainers();
+  if (!infoContent || !desc || !metaWrap) return;
 
   const data = mesh?.userData?.data || {}
   const story = (mesh?.userData?.story || "").trim()
@@ -104,15 +154,19 @@ export function updatePaintingInfo(mesh) {
   const mediumYear = data.medium_year || ""
   const dimensions = data.dimensions || ""
 
-  infoContent.innerHTML = `
+  // 메타만 갱신: infoContent 전체를 갈아엎지 말 것 (description 유지)
+  metaWrap.innerHTML = `
     <h2 class="info-title">${titleKor} <small>${titleEng}</small></h2>
     <div class="info-meta">
       <p class="artist">${artistKor}${artistEng ? `<br>${artistEng}` : ""}</p>
       <p class="year">${mediumYear}</p>
       <p class="size">${dimensions}</p>
     </div>
-    <p class="description">${story}</p>
-  `
+  `;
+
+  // 본문은 스크롤 컨테이너(.description)에만 주입
+  desc.innerHTML = story;
+  desc.scrollTop = 0;
 
   // 필요 시에만 열기: 이미 열려있다면 상태 유지
   const modal = document.getElementById("infoModal")

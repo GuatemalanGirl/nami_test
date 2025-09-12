@@ -4,6 +4,7 @@ import { ZOOM_DISTANCE } from '../core/constants.js'
 import { zoomTo } from './zoomControls.js'
 import { setZoomedPainting, setZoomLevel, getCameraMovingState } from '../domain/zoomState.js'
 import { getCurrentPaintingIndex, setCurrentPaintingIndex } from '../domain/currentPainting.js'
+import { setSelectedPainting } from '../domain/painting.js'
 
 /**
  * 작품 좌측(이전)으로 네비게이션
@@ -45,6 +46,7 @@ export function navigateRight(paintings, camera, controls) {
 
   const mesh = paintings[idx];
   zoomTo(mesh, ZOOM_DISTANCE, camera, controls); // 첫 번째 줌 거리로 초기화
-  setZoomedPainting(mesh); // 줌인된 그림 업데이트
+  setZoomedPainting(mesh); // 줌인된 그림 
+  setSelectedPainting(mesh);
   setZoomLevel(1); // 줌 레벨 초기화
 }

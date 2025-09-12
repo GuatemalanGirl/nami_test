@@ -172,7 +172,7 @@ button.nav-toggle:hover {
   display: none;
   position: fixed;
   top: 50%;
-  right: 10%;
+  right: 5%;
   transform: translateY(-50%); /* 중앙 기준에서 위/아래로 늘어남 */
 
   background-color: var(--modal-bg, rgba(255, 255, 255, 0.4));
@@ -180,10 +180,9 @@ button.nav-toggle:hover {
   padding: 20px;
   z-index: 995;
 
-  width: 300px;
-  max-width: 90vw;
+  width: 20vw;
   min-height: 280px;
-  max-height: 80dvh;
+  max-height: 50dvh;
 
   overflow-y: hidden;
 
@@ -209,7 +208,7 @@ button.nav-toggle:hover {
 #infoModal .description {
   margin-top: 1em;
   flex: 1 1 auto;
-  min-height: clamp(120px, 35dvh, 360px); /* 너무 작아지지 않게 */
+  min-height: 0;
   overflow-y: auto; /* 텍스트가 많으면 여기서만 스크롤 */
   /* 필요시 한도: max-height: 60dvh;  (없어도 OK: 남는 공간을 자동 사용) */
   -webkit-overflow-scrolling: touch; /* iOS 관성 스크롤 */
