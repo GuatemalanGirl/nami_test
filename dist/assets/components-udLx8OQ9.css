@@ -24,37 +24,37 @@
 #infoButton {
   width: 55px;
   height: 64px;
-  background-image: url("../../public/icons/navInfo.svg");
+  background-image: url("/public/icons/navInfo.svg");
 }
 #infoButton:hover {
-  background-image: url("../../public/icons/navInfoHover.svg");
+  background-image: url("/public/icons/navInfoHover.svg");
 }
 
 #leftButton {
   width: 48px;
   height: 80px;
-  background-image: url("../../public/icons/navLeft.svg");
+  background-image: url("/public/icons/navLeft.svg");
 }
 #leftButton:hover {
-  background-image: url("../../public/icons/navLeftHover.svg");
+  background-image: url("/public/icons/navLeftHover.svg");
 }
 
 #rightButton {
   width: 48px;
   height: 80px;
-  background-image: url("../../public/icons/navRight.svg");
+  background-image: url("/public/icons/navRight.svg");
 }
 #rightButton:hover {
-  background-image: url("../../public/icons/navRightHover.svg");
+  background-image: url("/public/icons/navRightHover.svg");
 }
 
 #homeButton {
   width: 47px;
   height: 65px;
-  background-image: url("../../public/icons/navHome.svg");
+  background-image: url("/public/icons/navHome.svg");
 }
 #homeButton:hover {
-  background-image: url("../../public/icons/navHomeHover.svg");
+  background-image: url("/public/icons/navHomeHover.svg");
 }
 
 /* 네비게이션 버튼 컨테이너 */
@@ -110,22 +110,22 @@
   transition: transform 0.2s;
 
   /* 배경(색+이미지) 한 번에 명시: hover 때도 색이 바뀌지 않도록 */
-  background: transparent url("../../public/icons/eyeOpen.svg") center/contain no-repeat !important;
+  background: transparent url("/public/icons/eyeOpen.svg") center/contain no-repeat !important;
 }
 
 /* OFF hover */
 .nav-toggle:hover {
-  background: transparent url("../../public/icons/eyeOpenHover.svg") center/contain no-repeat !important;
+  background: transparent url("/public/icons/eyeOpenHover.svg") center/contain no-repeat !important;
 }
 
 /* ON */
 .nav-toggle.active {
-  background: transparent url("../../public/icons/eyeClosed.svg") center/contain no-repeat !important;
+  background: transparent url("/public/icons/eyeClosed.svg") center/contain no-repeat !important;
 }
 
 /* ON hover */
 .nav-toggle.active:hover {
-  background: transparent url("../../public/icons/eyeClosedHover.svg") center/contain no-repeat !important;
+  background: transparent url("/public/icons/eyeClosedHover.svg") center/contain no-repeat !important;
 }
 
 .nav-toggle:active { transform: scale(0.95); }
@@ -274,7 +274,7 @@ button.nav-toggle:hover {
 
   /* 배경 */
   background-color: rgba(0, 0, 0, 0.7);
-  background-image: url("../../public/overlays/instruction.png");
+  background-image: url("/public/overlays/instruction.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -313,7 +313,7 @@ button.nav-toggle:hover {
 
 /* hover 효과 */
 .settings-icon:hover {
-  content: url("../../public/icons/settingsButtonHover.svg");
+  content: url("/public/icons/settingsButtonHover.svg");
   opacity: 0.7;
   transform: scale(1.1);
 }
@@ -1320,7 +1320,7 @@ input.color-pick-btn[type="color"]::-webkit-color-swatch { border: none; border-
   right: 24px; /* settingsToggle 이 좌측이면 대칭 위치 */
   border: none;
   background: transparent center/contain no-repeat;
-  background-image: url("../../public/icons/heart.svg"); /* 기본 아이콘 */
+  background-image: url("/public/icons/heart.svg"); /* 기본 아이콘 */
   cursor: pointer;
   transition: transform 0.4s ease-in-out;
   opacity: 0.7;
@@ -1329,7 +1329,7 @@ input.color-pick-btn[type="color"]::-webkit-color-swatch { border: none; border-
 
 /* hover 시 */
 .social-toggle:hover {
-  background-image: url("../../public/icons/heartHover.svg");
+  background-image: url("/public/icons/heartHover.svg");
   background-color: transparent !important;
   opacity: 0.7;
 }
