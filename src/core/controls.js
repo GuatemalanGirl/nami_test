@@ -50,7 +50,7 @@ export function createControls(camera, canvas, opts = {}) {
   controls.minDistance     = opts.minDistance     ?? 2
   controls.maxDistance     = opts.maxDistance     ?? 80
   controls.minPolarAngle   = opts.minPolarAngle   ?? Math.PI * 0.05   // ~9°
-  controls.maxPolarAngle   = opts.maxPolarAngle   ?? Math.PI * 0.48   // ~86°
+  controls.maxPolarAngle   = opts.maxPolarAngle   ?? Math.PI * 0.50   // ~90°
 
   // ── 입력 매핑(마우스/터치) ────────────────────────────────────────
   // 터치 환경 감지(필요 시 opts.forceTouch=true/false로 강제)
