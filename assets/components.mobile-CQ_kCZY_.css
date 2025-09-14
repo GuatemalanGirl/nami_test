@@ -228,6 +228,7 @@ button.nav-toggle:hover {
   left: 50%; /* 왼쪽으로 이동 */
   right: auto; /* 오른쪽 속성 해제 */
   transform: translate(-50%, -50%); /* 중앙 정렬 유지 */
+  z-index: 997;
 }
 
 /* 초저(낮은) 화면 대비: 비상 플랜 */
