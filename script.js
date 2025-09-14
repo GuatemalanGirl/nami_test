@@ -582,8 +582,16 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   const targetId = btn.getAttribute('data-panel');
 
-  // 핵심: 패널 전환은 반드시 showPanel로
+  // 패널 전환은 반드시 showPanel로
   showPanel(targetId, camera, controls, scene);
+
+  // 현재 바라보는 벽으로 패널의 벽 선택 동기화
+  //   (벽과 연동되는 패널들에만 적용: paintings / intro / artwalls)
+  const needsWallSync = ['panel-paintings', 'panel-intro', 'panel-artwalls'];
+  if (needsWallSync.includes(targetId)) {
+    // 새 슬라이드가 활성화된 다음 프레임에 동기화
+    requestAnimationFrame(() => alignToCameraWall(camera, controls, scene));
+  }
 
   // 새로 활성화된 패널의 상단 바로가기 바에서 active 스타일 갱신
   requestAnimationFrame(() => {
