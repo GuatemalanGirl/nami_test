@@ -128,6 +128,9 @@ if (THREE.ColorManagement && 'enabled' in THREE.ColorManagement) {
   THREE.ColorManagement.enabled = true;
 }
 
+// 🔧 터치 탭 중복 호출 방지용 스로틀 타임스탬프
+let __lastTouchTapAt = 0;
+
 async function init() {
   scene = createScene();
   camera = createCamera();
@@ -200,14 +203,40 @@ async function init() {
 
   document.getElementById("closeInfoButton").addEventListener("click", closeInfo)
 
-  renderer.domElement.addEventListener("click", (e) => {
-    // onClick 내부에서 터치 제스처 억제 + 캔버스 기준 좌표 처리
-    onClick(e, camera, controls, raycaster, pointer, getPaintings(), scene, renderer)
-  }, { passive: true })
+  // 🔧 터치/마우스 분리: 마우스는 click/dblclick 유지, 터치는 pointerup/touchend에서 직접 처리
+  const canvas = renderer.domElement;
+  canvas.style.touchAction = 'none'; // 브라우저 제스처(더블탭/스크롤) 차단
+
+  // 마우스 전용 click (터치는 pointerup에서 처리)
+  canvas.addEventListener("click", (e) => {
+    if ('pointerType' in e && e.pointerType !== 'mouse') return;
+    onClick(e, camera, controls, raycaster, pointer, getPaintings(), scene, renderer);
+  }, { passive: true });
   
-  renderer.domElement.addEventListener("dblclick", (e) => {
-    onDoubleClick(e, camera, controls, raycaster, pointer, getPaintings(), scene)
-  })
+  // 마우스 전용 dblclick
+  canvas.addEventListener("dblclick", (e) => {
+    if ('pointerType' in e && e.pointerType !== 'mouse') return;
+    onDoubleClick(e, camera, controls, raycaster, pointer, getPaintings(), scene, renderer);
+  });
+
+  // (보강) iOS 등 일부 환경에서 click 합성 누락 대비: touchend에서도 보장
+  canvas.addEventListener(
+    "touchend",
+    (event) => {
+      // 멀티터치는 무시
+      if (event.touches && event.touches.length > 1) return;
+
+      const now = performance.now();
+      if (now - __lastTouchTapAt < 60) return; // pointerup에서 이미 처리
+      __lastTouchTapAt = now;
+
+      if (event.cancelable) event.preventDefault(); // cancelable 체크 추가
+
+      // 좌표는 onClick 내부(BCR 기준)에서 처리되도록 event를 그대로 전달
+      onClick(event, camera, controls, raycaster, pointer, getPaintings(), scene, renderer);
+    },
+    { passive: false },
+  )
 
   // 마우스 드래그로 그림 위치 이동
   registerPaintingDragHandlers(renderer.domElement, {
@@ -247,29 +276,6 @@ async function init() {
     raycaster,
     scene,
     editingButtonsDiv
-  })
-
-  renderer.domElement.addEventListener(
-    "touchend",
-    (event) => {
-      if (event.touches && event.touches.length > 1) return // 멀티터치는 무시
-
-      if (event.cancelable) event.preventDefault() // cancelable 체크 추가
-      // 터치 위치 → pointer 위치로 변환
-      const touch = event.changedTouches[0]
-      const rect = renderer.domElement.getBoundingClientRect()
-      pointer.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1
-      pointer.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1
-      onClick(event, camera, controls, raycaster, pointer, getPaintings())
-    },
-    { passive: false },
-  )
-
-  document.addEventListener("mousedown", function (e) {
-    if (getIsResizingWithHandle() || getIsResizingPainting()) return;
-    // 편집버튼만 예외, 그 외 나머지 클릭 시 무조건 편집 종료
-    if (e.target.closest("#paintingEditButtons")) return
-    endEditingPainting(scene)
   })
 
   renderer.domElement.addEventListener("mousemove", onPointerMove)
@@ -345,8 +351,6 @@ document.getElementById("settingsToggle").addEventListener("click", () => {
     _navToggle && (_navToggle.style.display = 'none')                             
   }
 })
-
-
 
 function onPointerMove(event) {
   // 캔버스 기준 정규화 좌표 사용(레이캐스트 정확도 향상)
@@ -440,18 +444,28 @@ async function initApp() {
     // 핸들러 드래그 이벤트 바인딩
     const canvas = renderer.domElement;
 
-    canvas.addEventListener("pointerdown", e =>
-      onResizeHandlePointerDown(e, raycaster, pointer, camera, renderer),
-      { passive: false } // preventDefault 허용
-    );
-    canvas.addEventListener("pointermove", e =>
+    canvas.addEventListener("pointerdown", (e) => {
+      // 리사이즈 핸들에 실제 히트한 경우에만 기본 제스처 차단
+      const engaged = onResizeHandlePointerDown(e, raycaster, pointer, camera, renderer);
+      if (engaged && e.cancelable) e.preventDefault();
+    }, { passive: false }); // preventDefault 허용
+
+    canvas.addEventListener("pointermove", (e) =>
       onResizeHandlePointerMove(e, raycaster, pointer, camera, renderer, scene),
       { passive: false } // 터치 제스처 충돌 방지
     );
+
     canvas.addEventListener("pointerup", (e) => {
       try { e.target.releasePointerCapture?.(e.pointerId); } catch {}
       onResizeHandlePointerUp(scene);
-    }, { passive: true });
+
+      // 🔧 터치에서는 click 합성이 누락될 수 있으므로 pointerup에서 직접 onClick 실행
+      if (e.pointerType === 'touch') {
+        __lastTouchTapAt = performance.now();
+        onClick(e, camera, controls, raycaster, pointer, getPaintings(), scene, renderer);
+        if (e.cancelable) e.preventDefault();
+      }
+    }, { passive: false });
 
     canvas.addEventListener("pointercancel", (e) => {
       try { e.target.releasePointerCapture?.(e.pointerId); } catch {}
