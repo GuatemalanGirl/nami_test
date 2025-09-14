@@ -44,7 +44,9 @@ function extractKeyFromMesh(mesh) {
 
 // === 모달 상태 헬퍼
 function isInfoModalOpen() {
-  return document.getElementById('infoModal')?.style.display === 'block'
+  // 🔧 style.display 대신 getComputedStyle로 판단(클래스 토글/애니메이션 대응)
+  const el = document.getElementById('infoModal');
+  return !!el && getComputedStyle(el).display !== 'none';
 }
 function closeInfoModal() {
   const el = document.getElementById('infoModal')
@@ -125,7 +127,8 @@ export function zoomTo(painting, distance, camera, controls) {
       controls.enabled = true
 
       // 모달 열려있으면 다시 표시
-      if (document.getElementById('infoModal')?.style.display === 'block') {
+      const modal = document.getElementById('infoModal');
+      if (modal && getComputedStyle(modal).display !== 'none') {
         const mesh = getZoomedPainting()
         if (mesh && mesh.userData && mesh.userData.data) {
           showInfo(mesh.userData.data, mesh)
@@ -135,7 +138,27 @@ export function zoomTo(painting, distance, camera, controls) {
     .start()
 }
 
-// renderer를 옵션으로 추가해, 있으면 updatePointer로 캔버스 기준 좌표를 사용
+// 🔧 좌표 계산을 더 견고하게: 캔버스 BCR 기준 → 레이캐스트 빗나감 방지
+function setPointerFromEvent(event, pointer, renderer) {
+  // renderer가 있고 clientX/Y가 있는 이벤트이면 BCR 기준으로 계산
+  if (renderer?.domElement && event?.clientX != null && event?.clientY != null) {
+    const rect = renderer.domElement.getBoundingClientRect()
+    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+    return
+  }
+  // 그 외엔 기존 유틸 시도
+  if (renderer?.domElement) {
+    try { updatePointer(event, pointer, renderer); return } catch {}
+  }
+  // 최후 폴백: 창(window) 기준
+  if (event?.clientX != null && event?.clientY != null) {
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
+  }
+}
+
+// renderer를 옵션으로 추가해, 있으면 캔버스 기준 좌표를 사용
 export function onClick(event, camera, controls, raycaster, pointer, paintings, scene, renderer /* optional */) {
   if (getPaintingMode()) return // 설정창 작품선택 시 클릭 차단
   if (getCameraMovingState()) return
@@ -143,13 +166,8 @@ export function onClick(event, camera, controls, raycaster, pointer, paintings, 
   // 터치 기본 제스처 개입 방지(스크롤/더블탭 확대 등)
   if (event?.cancelable && event.pointerType && event.pointerType !== 'mouse') event.preventDefault()
 
-  // 좌표 계산: renderer가 있으면 캔버스 기준 정규화(-1~1), 없으면 기존 방식 폴백
-  if (renderer?.domElement) {
-    updatePointer(event, pointer, renderer)
-  } else {
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1
-    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
-  }
+  // 좌표 계산: 🔧 캔버스(BCR) 기준 정규화(-1~1)로 우선 처리
+  setPointerFromEvent(event, pointer, renderer)
   raycaster.setFromCamera(pointer, camera)
 
   const allPaintings = getPaintings()
@@ -246,14 +264,8 @@ export function onDoubleClick(event, camera, controls, raycaster, pointer, scene
     // 터치 기본 제스처 억제
     if (event?.cancelable && event.pointerType && event.pointerType !== 'mouse') event.preventDefault()
 
-    if (renderer?.domElement) {
-      // 캔버스 기준 좌표
-      updatePointer(event, pointer, renderer)
-    } else {
-      pointer.x = (event.clientX / window.innerWidth) * 2 - 1
-      pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
-    }
-
+    // 🔧 더블클릭도 동일하게 BCR 기준 좌표 적용
+    setPointerFromEvent(event, pointer, renderer)
     raycaster.setFromCamera(pointer, camera)
 
     const hits = raycaster.intersectObjects(getPaintings(), true)
