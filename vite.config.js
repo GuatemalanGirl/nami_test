@@ -7,6 +7,7 @@ export default defineConfig({
         outDir: 'dist' // 빌드 산출물 폴더
     },
     server: {
-        port: 5173 // 개발 서버 포트
+        port: 5173, // 개발 서버 포트
+        allowedHosts: ['2bcdaf34d0c5.ngrok-free.app'],
     },
 });
