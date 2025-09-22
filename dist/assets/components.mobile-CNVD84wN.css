@@ -412,7 +412,7 @@ img.settings-icon:hover {
   left: max(0px, env(safe-area-inset-left));
   right: max(0px, env(safe-area-inset-right));
   width: auto;
-  height: 25dvh;
+  height: 30dvh;
   background: rgba(200, 200, 200, 0.1);
   box-shadow: var(--panel-shadow, -2px 0 8px rgba(0, 0, 0, 0.2));
   border-radius: var(--radius-md, 20px);
@@ -2087,4 +2087,21 @@ input.color-pick-btn[type="color"]::-webkit-color-swatch { border: none; border-
   pointer-events: none;
   z-index: 2;
   padding: 0 5px;
+}
+
+/* ── 드래그 중 패널 입력 차단 (공통) ── */
+body.is-dragging #settingsPanel { pointer-events: none; }
+
+/* ── 네이티브 이미지 드래그 억제 ──*/
+#paintingGrid img, 
+#introGrid .thumbnail,
+#artwallGrid img {
+  -webkit-user-drag: none;
+}
+
+/* ── 드래그 고스트 (공통) ── */
+.drag-ghost { 
+  border-radius: 10px; 
+  box-shadow: 0 8px 18px rgba(0,0,0,0.2); 
+  background: rgba(255,255,255,0.25); 
 }
