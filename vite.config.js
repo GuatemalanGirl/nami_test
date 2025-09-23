@@ -8,6 +8,6 @@ export default defineConfig({
     },
     server: {
         port: 5173, // 개발 서버 포트
-        allowedHosts: ['2bcdaf34d0c5.ngrok-free.app'],
+        allowedHosts: ['a00a21baa7e8.ngrok-free.app'],
     },
 });
