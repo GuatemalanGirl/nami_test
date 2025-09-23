@@ -49,7 +49,7 @@ import { getCurrentWall } from './src/domain/wall.js'
 import { getZoomedInState } from './src/domain/zoomState.js'
 import { handleNavKeyDown } from './src/interaction/navKeyHandler.js'
 import { navigateLeft, navigateRight } from './src/interaction/paintingNavigation.js'
-import { moveCameraToHome, onClick, onDoubleClick } from './src/interaction/zoomControls.js'
+import { moveCameraToHome, onClick, onDoubleClick, attachAutoReturnOnZoomOut } from './src/interaction/zoomControls.js'
 import { populateArtwallGrid, setupArtwallPagination, initArtwallGridResponsive } from "./src/ui/artwallGrid.js"
 import { checkExhibitPeriod } from './src/ui/exhibitionExpired.js'
 import { setupExhibitSettings } from './src/ui/exhibitionPanel.js'
@@ -128,7 +128,7 @@ if (THREE.ColorManagement && 'enabled' in THREE.ColorManagement) {
   THREE.ColorManagement.enabled = true;
 }
 
-// 🔧 터치 탭 중복 호출 방지용 스로틀 타임스탬프
+// 터치 탭 중복 호출 방지용 스로틀 타임스탬프
 let __lastTouchTapAt = 0;
 
 async function init() {
@@ -146,6 +146,19 @@ async function init() {
     zoomSpeed: 1.0,
     panSpeed: 0.4
   });
+
+  // scene 꼭 넘겨주기 + 상대 임계 강화(약간만 뒤로 가도 복귀)
+  attachAutoReturnOnZoomOut({
+    camera,
+    controls,
+    scene,
+    useRelative: true,
+    delta: 0.35,      // 기존 0.7보다 민감
+    cooldownMs: 500,
+    respectMode: true,
+    debug: false,     // 필요시 true로 전환해 로그 확인
+  });
+
   quill = setupQuillEditor('#quillEditor');
 
   // infoModal이 필요로 하는 컨텍스트 주입 (여기!)
@@ -459,7 +472,7 @@ async function initApp() {
       try { e.target.releasePointerCapture?.(e.pointerId); } catch {}
       onResizeHandlePointerUp(scene);
 
-      // 🔧 터치에서는 click 합성이 누락될 수 있으므로 pointerup에서 직접 onClick 실행
+      // 터치에서는 click 합성이 누락될 수 있으므로 pointerup에서 직접 onClick 실행
       if (e.pointerType === 'touch') {
         __lastTouchTapAt = performance.now();
         onClick(e, camera, controls, raycaster, pointer, getPaintings(), scene, renderer);

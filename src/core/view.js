@@ -59,3 +59,44 @@ export function updateWallView(camera, controls) {
       .start()
   }    
 }
+
+/**
+ * 원하는 벽(wall)으로 카메라/타겟을 트윈으로 이동
+ * @param {'front'|'back'|'left'|'right'} wall
+ */
+export function updateWallViewTo(camera, controls, wall) {
+  updateAllWallLabels(wall) // 레이블 동기화
+
+  const pos = new THREE.Vector3()
+  const look = new THREE.Vector3(0, PAINTING_Y_OFFSET, 0)
+
+  switch (wall) {
+    case 'front': pos.set( 0, PAINTING_Y_OFFSET, -ROOM_DEPTH * 0.1); break
+    case 'right': pos.set( ROOM_WIDTH * 0.1, PAINTING_Y_OFFSET, 0);   break
+    case 'back':  pos.set( 0, PAINTING_Y_OFFSET,  ROOM_DEPTH * 0.1);  break
+    case 'left':  pos.set(-ROOM_WIDTH * 0.1, PAINTING_Y_OFFSET, 0);   break
+    default:      pos.set( 0, PAINTING_Y_OFFSET, -ROOM_DEPTH * 0.1);  break
+  }
+
+  const hasControls = !!(controls && controls.target)
+
+  new Tween(camera.position, tweenGroup)
+    .to(pos, 600)
+    .easing(Easing.Cubic.InOut)
+    .onUpdate(() => {
+      if (hasControls) camera.lookAt(controls.target)
+      else             camera.lookAt(look)
+    })
+    .start()
+
+  if (hasControls) {
+    new Tween(controls.target, tweenGroup)
+      .to(look, 600)
+      .easing(Easing.Cubic.InOut)
+      .onUpdate(() => {
+        controls.update()
+        camera.lookAt(controls.target)
+      })
+      .start()
+  }
+}

@@ -18,6 +18,9 @@ import { getPaintingsData, fetchPaintingsData } from '../data/painting.js'
 // 캔버스 기준 정규화 좌표 계산 유틸(존재 시 사용, 없으면 기존 방식 폴백)
 import { updatePointer } from '../core/pointer.js'
 
+import { updateWallViewTo } from '../core/view.js'
+import { getFacingWallName } from '../core/facingWall.js' // 레이캐스트 기반 벽 판정
+
 let prevCameraPos = null
 let prevControlsTarget = null
 let __lastCaptionClickAt = 0; // 최근 캡션 클릭 시각(ms)
@@ -44,7 +47,7 @@ function extractKeyFromMesh(mesh) {
 
 // === 모달 상태 헬퍼
 function isInfoModalOpen() {
-  // 🔧 style.display 대신 getComputedStyle로 판단(클래스 토글/애니메이션 대응)
+  // style.display 대신 getComputedStyle로 판단(클래스 토글/애니메이션 대응)
   const el = document.getElementById('infoModal');
   return !!el && getComputedStyle(el).display !== 'none';
 }
@@ -138,7 +141,7 @@ export function zoomTo(painting, distance, camera, controls) {
     .start()
 }
 
-// 🔧 좌표 계산을 더 견고하게: 캔버스 BCR 기준 → 레이캐스트 빗나감 방지
+// 좌표 계산을 더 견고하게: 캔버스 BCR 기준 → 레이캐스트 빗나감 방지
 function setPointerFromEvent(event, pointer, renderer) {
   // renderer가 있고 clientX/Y가 있는 이벤트이면 BCR 기준으로 계산
   if (renderer?.domElement && event?.clientX != null && event?.clientY != null) {
@@ -166,7 +169,7 @@ export function onClick(event, camera, controls, raycaster, pointer, paintings, 
   // 터치 기본 제스처 개입 방지(스크롤/더블탭 확대 등)
   if (event?.cancelable && event.pointerType && event.pointerType !== 'mouse') event.preventDefault()
 
-  // 좌표 계산: 🔧 캔버스(BCR) 기준 정규화(-1~1)로 우선 처리
+  // 좌표 계산: 캔버스(BCR) 기준 정규화(-1~1)로 우선 처리
   setPointerFromEvent(event, pointer, renderer)
   raycaster.setFromCamera(pointer, camera)
 
@@ -264,7 +267,7 @@ export function onDoubleClick(event, camera, controls, raycaster, pointer, scene
     // 터치 기본 제스처 억제
     if (event?.cancelable && event.pointerType && event.pointerType !== 'mouse') event.preventDefault()
 
-    // 🔧 더블클릭도 동일하게 BCR 기준 좌표 적용
+    // 더블클릭도 동일하게 BCR 기준 좌표 적용
     setPointerFromEvent(event, pointer, renderer)
     raycaster.setFromCamera(pointer, camera)
 
@@ -363,4 +366,141 @@ export function zoomBackOut(camera, controls) {
       prevControlsTarget = null
     })
     .start()
+}
+
+export function attachAutoReturnOnZoomOut(opts = {}) {
+  const {
+    camera, controls, scene,
+    useRelative = true, delta = 0.7,
+    threshold = 14, eps = 0.05,
+    cooldownMs = 600, respectMode = true, debug = false,
+  } = opts;
+
+  // 이미 붙어 있으면 재장착 금지
+  if (controls.__autoReturnAttached) {
+    if (debug) console.debug('[autoReturn] already attached, skip');
+    return;
+  }
+
+  let prevDist  = null;
+  let startDist = null;
+  let cooling   = false;
+  let armed     = false;
+
+  // 고정 피벗 계산용 임시 벡터
+  const _tmp = new THREE.Vector3();
+
+  function getFocusObject() {
+    return (typeof getZoomedPainting === 'function' && getZoomedPainting()) || null;
+  }
+
+  // 포커스 객체의 "고정 피벗"을 얻는다.
+  //   - zoomTo()에서 painting.userData.__focusPivot = target.clone() 로 캐시했다면 그 값을 우선 사용
+  //   - 캐시가 없다면 월드 포지션으로 폴백(원점이 중앙이 아닌 모델도 대체로 안정적)
+  function getFocusPivot(obj) {
+    if (!obj) return null;
+    if (obj.userData && obj.userData.__focusPivot) {
+      // clone() 으로 외부 변형을 차단
+      return obj.userData.__focusPivot.clone();
+    }
+    return obj.getWorldPosition(_tmp);
+  }
+
+  function distToFocus() {
+    const obj = getFocusObject();
+    if (!obj) {
+      // 포커스 없으면 컨트롤 타겟 기준(중앙 상태에선 자유)
+      return camera.position.distanceTo(controls?.target ?? camera.position);
+    }
+    const pivot = getFocusPivot(obj);
+    return camera.position.distanceTo(pivot);
+  }
+
+  // DOT 근사 폴백
+  function getFacingWallByDot() {
+    const dir = new THREE.Vector3();
+    if (controls?.target) dir.copy(controls.target).sub(camera.position).normalize();
+    else camera.getWorldDirection(dir).normalize();
+    const normals = {
+      front: new THREE.Vector3( 0,  0,  1),
+      back:  new THREE.Vector3( 0,  0, -1),
+      left:  new THREE.Vector3( 1,  0,  0),
+      right: new THREE.Vector3(-1,  0,  0),
+    };
+    let best = 'front', bestDot = -Infinity;
+    for (const [name, n] of Object.entries(normals)) {
+      const d = dir.dot(n);
+      if (d > bestDot) { bestDot = d; best = name; }
+    }
+    return best;
+  }
+
+  function maybeTrigger(dist) {
+    if (!armed) return;
+    if (cooling) return;
+    if (typeof getCameraMovingState === 'function' && getCameraMovingState()) return;
+    if (respectMode && typeof getPaintingMode === 'function' && getPaintingMode()) return;
+
+    // 작은 흔들림 걸러내기 + 명확한 “줌아웃”
+    const goingOut = prevDist != null && dist > (prevDist + eps) && dist > (startDist + eps);
+
+    // 상대 임계(권장): 제스처 시작 시점의 거리 + delta
+    const crossedRelative = useRelative && startDist != null && dist >= (startDist + delta);
+
+    // 절대 임계(옵션): threshold 상향 돌파
+    const crossedAbsolute = !useRelative && prevDist != null && (prevDist <= threshold && dist >= threshold);
+
+    if (debug) console.debug('[autoReturn maybe]', { dist, prevDist, startDist, goingOut, crossedRelative, crossedAbsolute, armed });
+
+    if (goingOut && (crossedRelative || crossedAbsolute)) {
+      cooling = true;
+
+      // 우선 레이캐스트, 실패하면 DOT 폴백
+      let facing = 'front';
+      try { if (scene) facing = getFacingWallName(camera, scene) || getFacingWallByDot(); }
+      catch { facing = getFacingWallByDot(); }
+
+      if (debug) console.debug('[autoReturn trigger] facing =', facing);
+      updateWallViewTo(camera, controls, facing);
+
+      // 중앙 복귀 후 상태 초기화(임계 얽힘 해제)
+      try { setZoomedPainting(null); } catch {}
+      try { setZoomLevel(0); } catch {}
+      armed     = false;
+      prevDist  = null;
+      startDist = null;
+
+      setTimeout(() => { cooling = false; }, cooldownMs);
+    }
+  }
+
+  function onChange() {
+    const d = distToFocus();
+    if (d == null) { prevDist = null; return; }
+    if (prevDist === null) prevDist = d;
+    maybeTrigger(d);
+    prevDist = d;
+  }
+
+  function onStart() {
+    const d = distToFocus();
+    prevDist  = d;
+    startDist = d;
+    armed     = !!getFocusObject(); // 포커스가 있을 때만 ‘무장’
+    if (debug) console.debug('[autoReturn start]', { armed, startDist });
+  }
+
+  function onEnd() {
+    const d = distToFocus();
+    if (d != null) prevDist = d;
+    startDist = prevDist;
+    if (debug) console.debug('[autoReturn end]', { prevDist });
+  }
+
+  controls.addEventListener('start',  onStart);
+  controls.addEventListener('change', onChange);
+  controls.addEventListener('end',    onEnd);
+
+  controls.__autoReturnAttached = true;
+  if (debug) console.debug('[autoReturn] attached');
 }
