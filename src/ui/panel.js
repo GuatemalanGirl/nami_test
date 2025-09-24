@@ -27,9 +27,8 @@ import { setCurrentWall } from '../domain/wall.js'
 // InfoModal 열려 있으면 우선 닫기
 export function showPanel(panelId, camera, controls, scene) {
   const modal = document.getElementById('infoModal')
-  if (modal && modal.style.display === 'block') {
-    closeInfo()
-  }
+  const isVisible = modal && getComputedStyle(modal).display !== 'none'
+  if (isVisible) closeInfo()
 
   const currentActive = document.querySelector('.settings-slide.active')
   const currentId = currentActive?.id
