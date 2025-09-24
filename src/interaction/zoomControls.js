@@ -339,7 +339,8 @@ export function saveCameraPrevState(camera, controls) {
   prevControlsTarget = controls.target.clone()
 }
 
-export function zoomBackOut(camera, controls) {
+export function zoomBackOut(camera, controls, opts = {}) {
+  const { keepControlsDisabled = false } = opts; // 서문 편집 모드에서 컨트롤 비활성 유지 옵션
   if (!prevCameraPos || !prevControlsTarget) return
 
   const startCam = camera.position.clone()
@@ -360,7 +361,8 @@ export function zoomBackOut(camera, controls) {
     })
     .onComplete(() => {
       setCameraMovingState(false)
-      controls.enabled = true // 완료 후 컨트롤 복구
+      // 필요 시 컨트롤을 계속 비활성 상태로 유지 (서문 편집 모드)
+      controls.enabled = keepControlsDisabled ? false : true
       // 초기화
       prevCameraPos = null
       prevControlsTarget = null

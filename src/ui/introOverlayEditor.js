@@ -251,7 +251,7 @@ export function setupOverlayEditorButtonEvents(camera, controls, quill) {
       updateIntroTextPlaneFromHTML(editingIntroMesh, quill.root.innerHTML)
     }
     introTextEditorOverlay.style.display = "none"
-    zoomBackOut(camera, controls)
+    zoomBackOut(camera, controls, { keepControlsDisabled: true })
     showPaintingEditButtons(editingIntroMesh)
     editingIntroMesh = null
   }
@@ -264,7 +264,7 @@ export function setupOverlayEditorButtonEvents(camera, controls, quill) {
       )
     }
     introTextEditorOverlay.style.display = "none"
-    zoomBackOut(camera, controls)
+    zoomBackOut(camera, controls, { keepControlsDisabled: true })
     showPaintingEditButtons(editingIntroMesh)
     editingIntroMesh = null
   }
