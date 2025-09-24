@@ -491,7 +491,7 @@ async function initApp() {
   }
 
   /*updateAllWallLabels() // 처음 레이블 세팅*/
-  addWallNavListeners(camera, controls) // 버튼 리스너 등록
+  addWallNavListeners(camera, controls, scene) // 버튼 리스너 등록
   populateIntroGrid() // 이 함수가 썸네일 생성 + dragstart 이벤트까지 담당
   initSocialPanel() // socialPanel(댓글/어워드 패널) 전체 이벤트/렌더 초기화
 
@@ -597,6 +597,8 @@ document.addEventListener('click', (e) => {
 
   // 패널 전환은 반드시 showPanel로
   showPanel(targetId, camera, controls, scene);
+  endEditingPainting(scene); // 편집 종료
+  endEditingArtwall(scene); // 편집 종료
 
   // 현재 바라보는 벽으로 패널의 벽 선택 동기화
   //   (벽과 연동되는 패널들에만 적용: paintings / intro / artwalls)

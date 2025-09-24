@@ -4,6 +4,9 @@ import * as THREE from 'three'
 import { safeUpdatePaintingOrder } from '../core/order.js'
 import { setIntroMode } from './introMode.js'
 import { markAsColorTexture } from '../core/colorManagement.js'
+import { removeOutline } from '../ui/outline.js'
+import { hidePaintingEditButtons } from '../ui/paintingEditButtons.js'
+import { endEditingPainting } from './paintingEditing.js'
 
 let tempIntroMeshes = []
 let originalIntroState = []
@@ -263,8 +266,10 @@ export function updateIntroTextScale(frameMesh) {
 //
 // 자동 저장용 커밋 함수
 //
-export function commitIntroChanges() {
+export function commitIntroChanges(scene) {
   setIntroMode(false); // 설정창 '전시서문쓰기 모드' 해제
   clearTempIntroMeshes(); // 임시 intro 메쉬 초기화
   safeUpdatePaintingOrder();
+  hidePaintingEditButtons();  // 편집종료 시 버튼 숨김
+  endEditingPainting(scene); // 편집 종료
 }

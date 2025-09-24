@@ -6,6 +6,7 @@ import { safeUpdatePaintingOrder } from '../core/order.js';
 import { setArtwallMode } from './artwallMode.js';
 import { removeOutline } from '../ui/outline.js';
 import { markAsColorTexture } from '../core/colorManagement.js';
+import { endEditingArtwall } from './artwallEditing.js';
 
 let artwalls = []; // 확정된 아트월들
 let tempArtwalls = []; // 편집 중 아트월들
@@ -129,5 +130,6 @@ export function commitArtwallChanges(scene) {
   setArtwallMode(false); // 설정창 '아트월선택 모드' 해제
   clearEditingArtwalls();
   removeOutline(scene);
+  endEditingArtwall(scene)
   safeUpdatePaintingOrder();
 }

@@ -6,6 +6,7 @@
 import { showOutline, removeOutline } from '../ui/outline.js';
 import { showArtwallButtons } from '../ui/artwallEditButtons.js';
 import { markArtwallAsEditing, clearEditingArtwalls, getArtwalls } from './artwall.js';
+import { hidePaintingEditButtons } from '../ui/paintingEditButtons.js';
 
 /**
  * 현재 편집(선택) 중인 아트월 Mesh
@@ -30,12 +31,12 @@ export function startEditingArtwall(mesh, scene, editingButtonsDiv) {
  * @param {THREE.Scene} scene - three.js scene 객체
  * @param {HTMLElement} editingButtonsDiv - 버튼 숨길 div 요소
  */
-export function endEditingArtwall(scene, editingButtonsDiv) {
+export function endEditingArtwall(scene) {
   if (!editingArtwall) return;
 
   clearEditingArtwalls();
   removeOutline(scene); // 테두리 제거 (공통)
-  editingButtonsDiv.style.display = "none";
+  hidePaintingEditButtons();
   editingArtwall = null;
 }
 

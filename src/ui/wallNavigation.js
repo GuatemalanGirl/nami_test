@@ -3,6 +3,9 @@
 import { getCurrentWall, rotateWall, setCurrentWall } from "../domain/wall.js"
 import { updateWallView } from "../core/view.js"
 import { getFacingWallName } from "../core/facingWall.js"
+import { endEditingPainting } from "../domain/paintingEditing.js"
+import { endEditingArtwall } from "../domain/artwallEditing.js"
+import { getCameraMovingState } from "../domain/zoomState.js"
 
 /**
  * 모든 `.current-wall-label` 요소의 텍스트를 현재 벽 이름으로 갱신
@@ -40,19 +43,26 @@ export function alignToCameraWall(camera, controls, scene) {
  * @param {THREE.Camera} camera 
  * @param {OrbitControls} controls 
  */
-export function addWallNavListeners(camera, controls) {
+export function addWallNavListeners(camera, controls, scene) {
+  const handle = (dir) => {
+    // 카메라 트윈/이동 중엔 입력 무시 (중복 트리거 방지)
+    if (typeof getCameraMovingState === 'function' && getCameraMovingState()) return
+
+    // 1) 편집/선택 상태를 ‘엔진 방식’으로 종료 (UI+상태 일괄 정리)
+    endEditingPainting(scene)
+    endEditingArtwall(scene)
+
+    // 2) 벽 회전 + 3) 시점 업데이트(트윈)
+    rotateWall(dir)
+    updateWallView(camera, controls)
+  }
+
   document.querySelectorAll(".wall-left-btn").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      rotateWall("left")
-      updateWallView(camera, controls)
-    })
+    btn.addEventListener("click", () => handle("left"))
   )
 
   document.querySelectorAll(".wall-right-btn").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      rotateWall("right")
-      updateWallView(camera, controls)
-    })
+    btn.addEventListener("click", () => handle("right"))
   )
 }
 
